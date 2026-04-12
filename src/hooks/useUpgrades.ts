@@ -48,143 +48,52 @@ export const useUpgrades = () => {
   });
 
   const purchaseUpgradeMutation = useMutation({
-    mutationFn: async ({ upgradeId, costCoins, costGems }: { 
-      upgradeId: string; 
-      costCoins: number; 
-      costGems: number; 
-    }) => {
+    mutationFn: async (upgradeId: string) => {
       if (!user?.id) throw new Error('Non authentifié');
 
-      // Vérifier les fonds avec protection des 100 pièces
-      const { data: garden } = await supabase
-        .from('player_gardens')
-        .select('coins, gems')
-        .eq('user_id', user.id)
-        .single();
+      const { data, error } = await supabase.rpc('purchase_upgrade_atomic', {
+        p_user_id: user.id,
+        p_upgrade_id: upgradeId
+      });
 
-      if (!garden) throw new Error('Jardin non trouvé');
-      
-      // Utiliser EconomyService pour vérifier si on peut acheter l'amélioration
-      if (garden.coins < (costCoins + 100)) { // Keep 100 coins reserve
-        throw new Error('Pas assez de pièces (gardez 100 pièces de réserve)');
-      }
-      
-      if ((garden.gems || 0) < costGems) {
-        throw new Error('Pas assez de gemmes');
-      }
+      if (error) throw error;
 
-      // Vérifier si l'amélioration existe déjà (désactivée)
-      const { data: existingUpgrade } = await supabase
-        .from('player_upgrades')
-        .select('id')
-        .eq('user_id', user.id)
-        .eq('upgrade_id', upgradeId)
-        .single();
+      const result = data as {
+        success: boolean;
+        error?: string;
+        effect_type?: string;
+        cost_coins?: number;
+        cost_gems?: number;
+      };
 
-      let upgradeError;
-      if (existingUpgrade) {
-        // Réactiver l'amélioration existante
-        const result = await supabase
-          .from('player_upgrades')
-          .update({ active: true })
-          .eq('user_id', user.id)
-          .eq('upgrade_id', upgradeId);
-        upgradeError = result.error;
-      } else {
-        // Créer une nouvelle amélioration
-        const result = await supabase
-          .from('player_upgrades')
-          .insert({
-            user_id: user.id,
-            upgrade_id: upgradeId
-          });
-        upgradeError = result.error;
-      }
-
-      if (upgradeError) throw upgradeError;
-
-      // Déduire le coût
-      const { error: gardenError } = await supabase
-        .from('player_gardens')
-        .update({
-          coins: (garden.coins || 0) - costCoins,
-          gems: (garden.gems || 0) - costGems
-        })
-        .eq('user_id', user.id);
-
-      if (gardenError) throw gardenError;
-
-      // Enregistrer la transaction
-      if (costCoins > 0) {
-        await supabase
-          .from('coin_transactions')
-          .insert({
-            user_id: user.id,
-            amount: -costCoins,
-            transaction_type: 'upgrade',
-            description: `Achat amélioration`
-          });
-      }
+      if (!result.success) throw new Error(result.error || 'Achat échoué');
+      return result;
     },
-    onSuccess: async (data, variables) => {
-      // Récupérer l'upgrade acheté pour vérifier son type
-      const upgradePurchased = availableUpgrades.find(u => u.id === variables.upgradeId);
-      
+    onSuccess: async (result) => {
       queryClient.invalidateQueries({ queryKey: ['playerUpgrades'] });
       queryClient.invalidateQueries({ queryKey: ['gameData'] });
-      
-      // Animations de soustraction pour les coûts
-      if (variables.costCoins > 0) {
-        triggerCoinAnimation(-variables.costCoins);
+
+      if (result.cost_coins && result.cost_coins > 0) {
+        triggerCoinAnimation(-result.cost_coins);
       }
-      if (variables.costGems > 0) {
-        triggerGemAnimation(-variables.costGems);
+      if (result.cost_gems && result.cost_gems > 0) {
+        triggerGemAnimation(-result.cost_gems);
       }
-      
+
       // Forcer la collecte du robot si c'est une amélioration robot
-      if (upgradePurchased && (upgradePurchased.effect_type === 'auto_harvest' || upgradePurchased.effect_type === 'robot_level')) {
-        console.log(`🤖 Amélioration robot achetée, collecte automatique forcée`);
-        
-        // Forcer la collecte immédiate des pièces accumulées avant l'amélioration
+      if (result.effect_type === 'auto_harvest' || result.effect_type === 'robot_level') {
         setTimeout(async () => {
           try {
             if (!user?.id) return;
-            
-            // Récupérer l'état actuel du robot pour forcer la collecte
-            const { data: garden } = await supabase
-              .from('player_gardens')
-              .select('robot_accumulated_coins, robot_last_collected, coins')
-              .eq('user_id', user.id)
-              .single();
-            
-            if (garden && garden.robot_accumulated_coins > 0) {
-              const now = new Date().toISOString();
-              
-              // Collecter les pièces accumulées et réinitialiser
-              await supabase
-                .from('player_gardens')
-                .update({
-                  coins: (garden.coins || 0) + garden.robot_accumulated_coins,
-                  robot_accumulated_coins: 0,
-                  robot_last_collected: now,
-                  last_played: now
-                })
-                .eq('user_id', user.id);
-              
-              console.log(`🤖 Collecte forcée: ${garden.robot_accumulated_coins} pièces`);
-            }
-            
-            // Invalider les queries pour rafraîchir les données
+            await supabase.rpc('collect_robot_income_atomic', { p_user_id: user.id });
             queryClient.invalidateQueries({ queryKey: ['passiveRobotState'] });
             queryClient.invalidateQueries({ queryKey: ['gameData'] });
-          } catch (error) {
-            console.error('Erreur lors de la collecte forcée:', error);
-            // En cas d'erreur, juste invalider les queries
+          } catch {
             queryClient.invalidateQueries({ queryKey: ['passiveRobotState'] });
           }
-        }, 500); // Délai réduit pour une collecte plus rapide
+        }, 500);
       }
-      
+
       toast.success('Amélioration achetée !', {
         description: 'Votre bonus est maintenant actif'
       });
@@ -196,8 +105,8 @@ export const useUpgrades = () => {
     }
   });
 
-  const purchaseUpgrade = (upgradeId: string, costCoins: number, costGems: number) => {
-    purchaseUpgradeMutation.mutate({ upgradeId, costCoins, costGems });
+  const purchaseUpgrade = (upgradeId: string) => {
+    purchaseUpgradeMutation.mutate(upgradeId);
   };
 
   const isUpgradePurchased = (upgradeId: string) => {

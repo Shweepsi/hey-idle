@@ -2,7 +2,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { AdReward } from "@/types/ads";
 import { AdValidationService } from "./AdValidationService";
 import { AdCooldownService } from "./AdCooldownService";
-import { AdRewardDistributionService } from "./AdRewardDistributionService";
 import { AdVerificationService } from "./AdVerificationService";
 
 export class AdSessionService {

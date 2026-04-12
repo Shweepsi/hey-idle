@@ -1,12 +1,10 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Progress } from '@/components/ui/progress';
 import { PlayerGarden } from '@/types/game';
 import { Crown, Star, Zap, AlertTriangle } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useState } from 'react';
-import { PRESTIGE_RESET_COINS, PRESTIGE_RESET_LEVEL, PRESTIGE_RESET_XP } from '@/constants';
 
 interface PrestigeSystemProps {
   garden: PlayerGarden;
@@ -43,58 +41,27 @@ export const PrestigeSystem = ({ garden, onPrestige }: PrestigeSystemProps) => {
     try {
       setIsProcessing(true);
 
-      const costCoins = prestigeCostsCoins[prestigeLevel] || Infinity;
-      const costGems = prestigeCostsGems[prestigeLevel] || Infinity;
+      const { data, error } = await supabase.rpc('execute_prestige', {
+        p_user_id: garden.user_id
+      });
 
-      if (garden.coins < costCoins || (garden.gems || 0) < costGems) {
-        toast.error('Fonds insuffisants pour le prestige');
-        setIsProcessing(false);
-        return;
+      if (error) throw new Error(error.message);
+
+      const result = data as {
+        success: boolean;
+        error?: string;
+        permanent_multiplier?: number;
+        gem_bonus?: number;
+      };
+      if (!result?.success) {
+        throw new Error(result?.error || 'Prestige échoué');
       }
 
-      // Add gem bonus for prestige
-      const gemBonus = [5, 10, 20][prestigeLevel] || 0;
-      
-      const { error } = await supabase.from('player_gardens').update({
-        coins: PRESTIGE_RESET_COINS,
-        gems: (garden.gems || 0) - costGems + gemBonus, // Add gem bonus
-        experience: PRESTIGE_RESET_XP,
-        level: PRESTIGE_RESET_LEVEL,
-        prestige_level: prestigeLevel + 1,
-        permanent_multiplier: nextMultiplier,
-        prestige_points: (garden.prestige_points || 0) + 1
-      }).eq('user_id', garden.user_id);
+      const appliedMult = result.permanent_multiplier ?? nextMultiplier;
+      const appliedBonus = result.gem_bonus ?? 0;
 
-      if (error) throw error;
-
-      const { error: upgradesError } = await supabase
-        .from('player_upgrades')
-        .update({ active: false })
-        .eq('user_id', garden.user_id);
-
-      if (upgradesError) {
-        console.error('Erreur lors de la désactivation des améliorations:', upgradesError);
-      }
-
-      // Auto-unlock second plot after prestige (QoL improvement)
-      await supabase.from('garden_plots').update({
-        plant_type: null,
-        planted_at: null,
-        growth_time_seconds: null,
-        plant_metadata: null,
-        unlocked: false
-      }).eq('user_id', garden.user_id).gt('plot_number', 2);
-
-      await supabase.from('garden_plots').update({
-        plant_type: null,
-        planted_at: null,
-        growth_time_seconds: null,
-        plant_metadata: null,
-        unlocked: true
-      }).eq('user_id', garden.user_id).in('plot_number', [1, 2]);
-
-      toast.success(`🎉 Prestige accompli ! Multiplicateur permanent : X${nextMultiplier}`, {
-        description: `Vous repartez avec un bonus permanent de X${nextMultiplier} + ${gemBonus} gemmes bonus + 2ème parcelle débloquée !`
+      toast.success(`🎉 Prestige accompli ! Multiplicateur permanent : X${appliedMult}`, {
+        description: `Vous repartez avec un bonus permanent de X${appliedMult} + ${appliedBonus} gemmes bonus + 2ème parcelle débloquée !`
       });
       onPrestige();
     } catch (error: any) {
@@ -105,8 +72,6 @@ export const PrestigeSystem = ({ garden, onPrestige }: PrestigeSystemProps) => {
       setIsProcessing(false);
     }
   };
-
-  const progressPercentage = Math.min(garden.coins / costCoins * 100, 100);
 
   return (
     <Card className="border-2 border-purple-200">

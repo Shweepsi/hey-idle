@@ -284,7 +284,7 @@ export const UpgradesPage = () => {
                       </div>
 
                       {/* Bouton d'achat compact */}
-                      <Button size="sm" disabled={!canBuy || isPurchased || isPurchasing} onClick={() => purchaseUpgrade(currentUpgrade.id, currentUpgrade.cost_coins, currentUpgrade.cost_gems)} className={`w-full font-semibold text-xs py-1.5 transition-all duration-300 ${buttonState.style} ${canBuy ? 'hover:scale-105 hover:shadow-lg' : ''}`}>
+                      <Button size="sm" disabled={!canBuy || isPurchased || isPurchasing} onClick={() => purchaseUpgrade(currentUpgrade.id)} className={`w-full font-semibold text-xs py-1.5 transition-all duration-300 ${buttonState.style} ${canBuy ? 'hover:scale-105 hover:shadow-lg' : ''}`}>
                         {isPurchasing ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : isLocked ? <Lock className="h-4 w-4 mr-2" /> : null}
                         {buttonState.text}
                       </Button>

@@ -1,18 +1,14 @@
 
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useEffect } from 'react';
-import { UnifiedCalculationService } from '@/services/UnifiedCalculationService';
 import { useAchievements } from '@/hooks/useAchievements';
-import { useGemSources } from '@/hooks/useGemSources';
 import { logger } from '@/utils/logger';
 
 export const useGameData = () => {
   const { user } = useAuth();
-  const queryClient = useQueryClient();
   const { checkAchievementProgress } = useAchievements();
-  const { checkLevelGemReward } = useGemSources();
 
   // OPTIMISATION: Réduire les invalidations automatiques pour éviter les conflits avec les mises à jour optimistes
   // Les real-time subscriptions sont désactivées car nous gérons manuellement les mises à jour via optimistic updates
@@ -59,15 +55,10 @@ export const useGameData = () => {
         }))
       );
 
-      // Check for achievements and level rewards when data changes
+      // Check for achievements when data changes. Level-milestone gem
+      // rewards are now awarded server-side inside harvest_plant_transaction.
       if (result.garden) {
         checkAchievementProgress(result.garden);
-        
-        // Check for level-based gem rewards
-        const previousData = queryClient.getQueryData(['gameData', user.id]) as any;
-        if (previousData?.garden) {
-          checkLevelGemReward(result.garden.level || 1, previousData.garden.level || 1);
-        }
       }
 
       return result;

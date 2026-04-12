@@ -2,7 +2,6 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useGameData } from '@/hooks/useGameData';
-import { useGameMultipliers } from '@/hooks/useGameMultipliers';
 import { useUnifiedCalculations } from '@/hooks/useUnifiedCalculations';
 import { ValidationCacheService } from '@/services/ValidationCacheService';
 import { toast } from 'sonner';
@@ -18,7 +17,6 @@ export const useDirectPlanting = () => {
   const { data: gameData } = useGameData();
   const [plantingPlotNumber, setPlantingPlotNumber] = useState<number | null>(null);
   const { triggerCoinAnimation } = useAnimations();
-  const { getCompleteMultipliers } = useGameMultipliers();
 
   // Cache plant types when gameData is available
   useEffect(() => {
@@ -89,38 +87,25 @@ export const useDirectPlanting = () => {
         plantType = plantTypeResult.data;
       }
 
-      // Quick validations
+      // Quick client-side pre-validation for UX only; server is authoritative.
       if (!plot?.unlocked) throw new Error('Plot not unlocked');
       if (plot.plant_type || plot.planted_at) throw new Error('Plot already occupied');
-      
+
       const playerLevel = garden.level || 1;
       const requiredLevel = plantType.level_required || 1;
       if (playerLevel < requiredLevel) throw new Error(`Level ${requiredLevel} required`);
 
-      // Get multipliers
-      const multipliers = getCompleteMultipliers();
-      const baseCost = calculations.getPlantDirectCost(requiredLevel);
-      const actualCost = Math.floor(baseCost * (multipliers.plantCostReduction || 1));
-
-      // Cost validation
-      if (Math.abs(actualCost - expectedCost) > 1) {
-        throw new Error('Cost mismatch, please reload');
-      }
-      if (garden.coins < actualCost) {
+      if (garden.coins < expectedCost) {
         throw new Error('Insufficient coins');
       }
 
-      const baseGrowthSeconds = plantType.base_growth_seconds || 60;
-
       logger.debug(`Using atomic DB function for plot ${plotNumber}`);
-      
-      // Use the new atomic function
+
+      // Server computes cost + growth time from plant_types + upgrades.
       const { data: result, error } = await supabase.rpc('plant_direct_atomic', {
         p_user_id: user.id,
         p_plot_number: plotNumber,
-        p_plant_type_id: plantTypeId,
-        p_cost_amount: actualCost,
-        p_base_growth_seconds: baseGrowthSeconds
+        p_plant_type_id: plantTypeId
       });
 
       if (error) {
@@ -135,6 +120,8 @@ export const useDirectPlanting = () => {
         planted_at?: string;
         new_coin_balance?: number;
         plant_name?: string;
+        cost?: number;
+        growth_time_seconds?: number;
       };
 
       if (!typedResult.success) {
@@ -142,20 +129,19 @@ export const useDirectPlanting = () => {
       }
 
       logger.debug('Atomic planting successful', typedResult);
-      
-      // Clear player data cache to force refresh
+
       ValidationCacheService.clearPlayerData();
-      
-      // Trigger coin animation
-      triggerCoinAnimation(-actualCost);
-      
+
+      const serverCost = typedResult.cost ?? expectedCost;
+      triggerCoinAnimation(-serverCost);
+
       return {
         plotNumber,
         plantTypeId,
-        actualCost,
-        adjustedGrowthTime: baseGrowthSeconds,
+        actualCost: serverCost,
+        adjustedGrowthTime: typedResult.growth_time_seconds ?? (plantType.base_growth_seconds || 60),
         plantedAt: typedResult.planted_at || new Date().toISOString(),
-        newCoinBalance: typedResult.new_coin_balance || (garden.coins - actualCost)
+        newCoinBalance: typedResult.new_coin_balance ?? ((garden.coins || 0) - serverCost)
       };
     },
     onMutate: async ({ plotNumber, plantTypeId, expectedCost }) => {

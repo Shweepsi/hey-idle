@@ -4,7 +4,6 @@ import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
 import { useUnifiedCalculations } from '@/hooks/useUnifiedCalculations';
 import { useAnimations } from '@/contexts/AnimationContext';
-import { useGameMultipliers } from '@/hooks/useGameMultipliers';
 import { useAudio } from '@/contexts/AudioContext';
 import { MAX_PLOTS } from '@/constants';
 
@@ -12,7 +11,6 @@ export const usePlantActions = () => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const calculations = useUnifiedCalculations();
-  const { applyGemsBoost } = useGameMultipliers();
   const { triggerCoinAnimation, triggerGemAnimation } = useAnimations();
   const { playSound } = useAudio();
 
@@ -103,25 +101,12 @@ export const usePlantActions = () => {
         throw new Error(harvestCheck.reason || 'Impossible de récolter cette plante');
       }
 
-      console.log('✅ Plante prête pour la récolte');
+      console.log('✅ Plante prête pour la récolte (pre-check client-side)');
 
-      // UNIFIED CALCULATIONS: Use the same service as backend
-      const backendParams = calculations.createBackendParams(plot, plantType, garden);
-      const boostedGems = applyGemsBoost(backendParams.gemReward);
-
-      console.log(`💰 Récompenses calculées (unified): ${backendParams.harvestReward} pièces, ${backendParams.expReward} EXP, ${backendParams.gemReward} gemmes (${boostedGems} avec boost)`);
-
-      // UNIFIED BACKEND CALL: Use exact same parameters
-      console.log('🚀 Utilisation de la transaction atomique unified avec synchronisation parfaite');
-      
+      // Server computes all rewards from DB state. Client passes only identifiers.
       const { data: transactionResult, error: transactionError } = await supabase.rpc('harvest_plant_transaction', {
         p_user_id: user.id,
-        p_plot_number: plotNumber,
-        p_harvest_reward: backendParams.harvestReward,
-        p_exp_reward: backendParams.expReward,
-        p_gem_reward: boostedGems,
-        p_growth_time_seconds: backendParams.actualGrowthTime,
-        p_multipliers: calculations.multipliers as any
+        p_plot_number: plotNumber
       });
 
       if (transactionError) {
@@ -151,40 +136,10 @@ export const usePlantActions = () => {
         }
       }, 0);
 
-      // OPTIMISATION: Batching des logs pour réduire les requêtes
-      const logPromises = [];
-      
-      // Enregistrer la transaction
-        logPromises.push(
-          supabase
-            .from('coin_transactions')
-            .insert({
-              user_id: user.id,
-              amount: result.harvest_reward,
-              transaction_type: 'harvest',
-              description: `Récolte de ${plantType.display_name || plantType.name}`
-            })
-        );
+      // coin_transactions + plant_discoveries are now recorded server-side
+      // inside harvest_plant_transaction RPC — no client writes needed.
 
-      // Enregistrer la découverte
-      logPromises.push(
-        supabase
-          .from('plant_discoveries')
-          .insert({
-            user_id: user.id,
-            plant_type_id: plantType.id,
-            discovery_method: 'harvest'
-          })
-      );
-
-      // Exécuter tous les logs en parallèle et de manière asynchrone (non-bloquant)
-      setTimeout(() => {
-        Promise.allSettled(logPromises).catch(error => {
-          console.warn('⚠️ Erreur lors de l\'enregistrement des logs:', error);
-        });
-      }, 0);
-
-      // Messages de réussite  
+      // Messages de réussite
       if (finalLevel > (garden.level || 1)) {
         console.log(`🔥 Nouveau niveau atteint: ${finalLevel}`);
       }

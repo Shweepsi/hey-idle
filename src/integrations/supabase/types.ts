@@ -693,14 +693,17 @@ export type Database = {
       get_user_level_rank: { Args: { target_user_id: string }; Returns: number }
       harvest_plant_transaction: {
         Args: {
-          p_exp_reward: number
-          p_gem_reward: number
-          p_growth_time_seconds: number
-          p_harvest_reward: number
-          p_multipliers?: Json
           p_plot_number: number
           p_user_id: string
         }
+        Returns: Json
+      }
+      execute_prestige: {
+        Args: { p_user_id: string }
+        Returns: Json
+      }
+      unlock_plot_atomic: {
+        Args: { p_plot_number: number; p_user_id: string }
         Returns: Json
       }
       increment_ad_count_atomic: {
@@ -714,8 +717,6 @@ export type Database = {
       }
       plant_direct_atomic: {
         Args: {
-          p_base_growth_seconds: number
-          p_cost_amount: number
           p_plant_type_id: string
           p_plot_number: number
           p_user_id: string

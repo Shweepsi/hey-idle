@@ -14,54 +14,23 @@ export const useGameEconomy = () => {
     mutationFn: async (plotNumber: number) => {
       if (!user?.id) throw new Error('Not authenticated');
 
-      const { data: costData } = await supabase.rpc('get_plot_unlock_cost', { plot_number: plotNumber });
-      const cost = costData || 0;
+      const { data, error } = await supabase.rpc('unlock_plot_atomic', {
+        p_user_id: user.id,
+        p_plot_number: plotNumber
+      });
 
-      const { data: garden } = await supabase
-        .from('player_gardens')
-        .select('coins')
-        .eq('user_id', user.id)
-        .single();
+      if (error) throw new Error(error.message);
 
-      if (!garden) {
-        throw new Error('Jardin non trouvé');
+      const result = data as { success: boolean; error?: string; cost?: number };
+      if (!result?.success) {
+        throw new Error(result?.error || 'Erreur lors du déblocage');
       }
 
-      if (garden.coins < (cost + 100)) { // Keep 100 coins reserve
-        throw new Error('Pas assez de pièces (minimum 100 pièces à conserver)');
-      }
-
-      await supabase
-        .from('garden_plots')
-        .update({ unlocked: true })
-        .eq('user_id', user.id)
-        .eq('plot_number', plotNumber);
-
-      await supabase
-        .from('player_gardens')
-        .update({
-          coins: (garden.coins || 0) - cost,
-          last_played: new Date().toISOString()
-        })
-        .eq('user_id', user.id);
-
-      await supabase
-        .from('coin_transactions')
-        .insert({
-          user_id: user.id,
-          amount: -cost,
-          transaction_type: 'unlock',
-          description: `Déblocage parcelle ${plotNumber}`
-        });
-      
-      return { cost };
+      return { cost: result.cost || 0 };
     },
-    onSuccess: (data, variables) => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['gameData'] });
-      
-      // Animation de soustraction des pièces pour le déblocage
       triggerCoinAnimation(-data.cost);
-      
       toast.success('Parcelle débloquée !');
     },
     onError: (error: any) => {

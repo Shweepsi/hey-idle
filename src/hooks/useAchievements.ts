@@ -136,115 +136,47 @@ export const useAchievements = () => {
     loadAchievements();
   }, [user]);
 
-  // Check achievement progress with database persistence
-  const checkAchievementProgress = async (garden: any) => {
-    if (!user || !garden) return;
+  // Check achievement progress via server RPC. The RPC validates garden
+  // state against the target, grants rewards once, and handles the progress
+  // record. Client no longer writes to player_achievements or player_gardens.
+  const checkAchievementProgress = async (_garden: any) => {
+    if (!user) return;
 
     for (const baseAchievement of baseAchievements) {
-      let currentProgress = 0;
-      
-      switch (baseAchievement.category) {
-        case 'harvest':
-          currentProgress = garden.total_harvests || 0;
-          break;
-        case 'wealth':
-          currentProgress = garden.coins || 0;
-          break;
-        case 'prestige':
-          currentProgress = garden.prestige_level || 0;
-          break;
-        case 'planting':
-          currentProgress = garden.total_harvests > 0 ? 1 : 0;
-          break;
+      const { data, error } = await supabase.rpc('claim_achievement_atomic', {
+        p_user_id: user.id,
+        p_achievement_name: baseAchievement.name
+      });
+
+      if (error) {
+        console.error(`Achievement RPC error (${baseAchievement.name}):`, error);
+        continue;
       }
 
-      // Check existing achievement from database to prevent duplicates
-      const { data: existingAchievement } = await supabase
-        .from('player_achievements')
-        .select('*')
-        .eq('user_id', user.id)
-        .eq('achievement_name', baseAchievement.name)
-        .single();
+      const result = data as {
+        success: boolean;
+        completed?: boolean;
+        already_completed?: boolean;
+        progress?: number;
+      };
+      if (!result?.success) continue;
 
-      // If achievement should be completed and isn't already completed
-      if (currentProgress >= baseAchievement.target && !existingAchievement?.completed) {
-        await completeAchievement(baseAchievement, currentProgress);
-      } else if (existingAchievement && !existingAchievement.completed) {
-        // Update progress without completing
-        await supabase
-          .from('player_achievements')
-          .update({ progress: currentProgress })
-          .eq('user_id', user.id)
-          .eq('achievement_name', baseAchievement.name);
-      } else if (!existingAchievement) {
-        // Create new achievement record
-        await supabase
-          .from('player_achievements')
-          .insert({
-            user_id: user.id,
-            achievement_name: baseAchievement.name,
-            achievement_category: baseAchievement.category,
-            progress: currentProgress,
-            target: baseAchievement.target,
-            completed: currentProgress >= baseAchievement.target
-          });
-      }
-    }
-  };
-
-  const completeAchievement = async (achievement: Omit<Achievement, 'id' | 'progress' | 'completed' | 'unlocked_at'>, progress: number) => {
-    try {
-      // Use upsert to prevent duplicates
-      const { error: achievementError } = await supabase
-        .from('player_achievements')
-        .upsert({
-          user_id: user!.id,
-          achievement_name: achievement.name,
-          achievement_category: achievement.category,
-          progress: progress,
-          target: achievement.target,
-          completed: true,
-          completed_at: new Date().toISOString()
-        }, { 
-          onConflict: 'user_id,achievement_name',
-          ignoreDuplicates: false 
+      if (result.completed && !result.already_completed) {
+        toast.success(`🏆 Achievement débloqué : ${baseAchievement.emoji} ${baseAchievement.name}`, {
+          description: `+${baseAchievement.reward_coins} pièces, +${baseAchievement.reward_gems} gemmes`
         });
-
-      if (achievementError) {
-        console.error('Error saving achievement:', achievementError);
-        return;
-      }
-
-      // Get current values and award rewards
-      const { data: garden } = await supabase
-        .from('player_gardens')
-        .select('coins, gems')
-        .eq('user_id', user!.id)
-        .single();
-        
-      if (garden) {
-        await supabase
-          .from('player_gardens')
-          .update({
-            coins: (garden.coins || 0) + achievement.reward_coins,
-            gems: (garden.gems || 0) + achievement.reward_gems
-          })
-          .eq('user_id', user!.id);
-
-        toast.success(`🏆 Achievement débloqué : ${achievement.emoji} ${achievement.name}`, {
-          description: `+${achievement.reward_coins} pièces, +${achievement.reward_gems} gemmes`
-        });
-
-        // Update local state
-        setAchievements(prev => prev.map(a => 
-          a.name === achievement.name 
-            ? { ...a, completed: true, progress: progress, unlocked_at: new Date().toISOString() }
+        setAchievements(prev => prev.map(a =>
+          a.name === baseAchievement.name
+            ? { ...a, completed: true, progress: result.progress ?? a.progress, unlocked_at: new Date().toISOString() }
+            : a
+        ));
+      } else if (typeof result.progress === 'number') {
+        setAchievements(prev => prev.map(a =>
+          a.name === baseAchievement.name
+            ? { ...a, progress: result.progress }
             : a
         ));
       }
-
-    } catch (error) {
-      console.error('Error completing achievement:', error);
     }
   };
 
