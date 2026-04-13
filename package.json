@@ -1,9 +1,9 @@
 {
-  "name": "grow-garden-verse",
+  "name": "hey-idle",
   "version": "1.0.0",
   "private": true,
   "type": "module",
-  "description": "Jeu mobile Grow Garden Verse avec Capacitor",
+  "description": "Jeu mobile Hey Idle avec Capacitor",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
