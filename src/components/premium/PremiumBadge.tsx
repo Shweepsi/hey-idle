@@ -6,7 +6,10 @@ interface PremiumBadgeProps {
   className?: string;
 }
 
-export const PremiumBadge = ({ variant = 'default', className = '' }: PremiumBadgeProps) => {
+export const PremiumBadge = ({
+  variant = 'default',
+  className = '',
+}: PremiumBadgeProps) => {
   if (variant === 'compact') {
     return (
       <div className={`inline-flex items-center gap-1 ${className}`}>
@@ -24,8 +27,8 @@ export const PremiumBadge = ({ variant = 'default', className = '' }: PremiumBad
   }
 
   return (
-    <Badge 
-      variant="secondary" 
+    <Badge
+      variant="secondary"
       className={`bg-gradient-to-r from-yellow-500/10 to-orange-500/10 text-yellow-600 border-yellow-500/20 animate-pulse ${className}`}
     >
       <Crown className="h-4 w-4 mr-1" />

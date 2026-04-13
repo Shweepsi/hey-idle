@@ -1,24 +1,30 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Minus, Plus, RotateCcw, Type } from 'lucide-react';
 import { useFontSize, FontSize } from '@/hooks/useFontSize';
 
 const fontSizeLabels: Record<FontSize, string> = {
-  'small': 'Petite',
-  'medium': 'Normale', 
-  'large': 'Grande',
-  'extra-large': 'Très grande'
+  small: 'Petite',
+  medium: 'Normale',
+  large: 'Grande',
+  'extra-large': 'Très grande',
 };
 
 export function FontSizeSelector() {
-  const { 
-    fontSize, 
-    increaseFontSize, 
-    decreaseFontSize, 
+  const {
+    fontSize,
+    increaseFontSize,
+    decreaseFontSize,
     resetFontSize,
     canIncrease,
-    canDecrease 
+    canDecrease,
   } = useFontSize();
 
   return (
@@ -34,16 +40,18 @@ export function FontSizeSelector() {
           </div>
         </div>
       </CardHeader>
-      
+
       <CardContent className="space-y-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-2">
-            <span className="text-sm text-muted-foreground">Taille actuelle :</span>
+            <span className="text-sm text-muted-foreground">
+              Taille actuelle :
+            </span>
             <Badge variant="secondary" className="text-sm">
               {fontSizeLabels[fontSize]}
             </Badge>
           </div>
-          
+
           <Button
             variant="ghost"
             size="sm"
@@ -66,7 +74,7 @@ export function FontSizeSelector() {
             <Minus className="h-4 w-4 mr-1" />
             Diminuer
           </Button>
-          
+
           <Button
             variant="outline"
             size="sm"

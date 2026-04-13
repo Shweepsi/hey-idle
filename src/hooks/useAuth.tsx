@@ -1,5 +1,10 @@
-
-import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  ReactNode,
+} from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
@@ -9,7 +14,11 @@ interface AuthContextType {
   user: User | null;
   session: Session | null;
   loading: boolean;
-  signUp: (email: string, password: string, username?: string) => Promise<{ error: any }>;
+  signUp: (
+    email: string,
+    password: string,
+    username?: string
+  ) => Promise<{ error: any }>;
   signIn: (email: string, password: string) => Promise<{ error: any }>;
   signOut: () => Promise<void>;
 }
@@ -24,17 +33,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     // Set up auth state listener
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        setSession(session);
-        setUser(session?.user ?? null);
-        setLoading(false);
-        
-        if (event === 'SIGNED_IN') {
-          navigate('/garden');
-        }
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((event, session) => {
+      setSession(session);
+      setUser(session?.user ?? null);
+      setLoading(false);
+
+      if (event === 'SIGNED_IN') {
+        navigate('/garden');
       }
-    );
+    });
 
     // Check for existing session
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -48,46 +57,50 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const signUp = async (email: string, password: string, username?: string) => {
     const redirectUrl = `${window.location.origin}/garden`;
-    
+
     const { error } = await supabase.auth.signUp({
       email,
       password,
       options: {
         emailRedirectTo: redirectUrl,
         data: {
-          username: username || 'Jardinier'
-        }
-      }
+          username: username || 'Jardinier',
+        },
+      },
     });
-    
+
     if (error) {
       // Gérer les différents types d'erreurs
       if (error.message.includes('User already registered')) {
-        toast.error('Un compte existe déjà avec cette adresse email. Essayez de vous connecter.');
+        toast.error(
+          'Un compte existe déjà avec cette adresse email. Essayez de vous connecter.'
+        );
       } else if (error.message.includes('already been registered')) {
-        toast.error('Cette adresse email est déjà utilisée. Connectez-vous plutôt.');
+        toast.error(
+          'Cette adresse email est déjà utilisée. Connectez-vous plutôt.'
+        );
       } else if (error.message.includes('email address not authorized')) {
-        toast.error('Cette adresse email n\'est pas autorisée.');
+        toast.error("Cette adresse email n'est pas autorisée.");
       } else {
         toast.error(error.message);
       }
     } else {
       toast.success('Inscription réussie ! Vérifiez votre email.');
     }
-    
+
     return { error };
   };
 
   const signIn = async (email: string, password: string) => {
     const { error } = await supabase.auth.signInWithPassword({
       email,
-      password
+      password,
     });
-    
+
     if (error) {
       toast.error(error.message);
     }
-    
+
     return { error };
   };
 
@@ -100,14 +113,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   return (
-    <AuthContext.Provider value={{
-      user,
-      session,
-      loading,
-      signUp,
-      signIn,
-      signOut
-    }}>
+    <AuthContext.Provider
+      value={{
+        user,
+        session,
+        loading,
+        signUp,
+        signIn,
+        signOut,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );

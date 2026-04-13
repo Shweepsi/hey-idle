@@ -14,13 +14,13 @@ export class AdCacheService {
     this.cache.set(key, {
       data,
       timestamp: Date.now(),
-      ttl
+      ttl,
     });
   }
 
   static get<T>(key: string): T | null {
     const entry = this.cache.get(key);
-    
+
     if (!entry) {
       return null;
     }
@@ -70,8 +70,10 @@ export class AdCacheService {
    */
   static clearAllRewardsCache(): void {
     const keys = Array.from(this.cache.keys());
-    keys.filter(key => key.startsWith('rewards_level_')).forEach(key => {
-      this.delete(key);
-    });
+    keys
+      .filter((key) => key.startsWith('rewards_level_'))
+      .forEach((key) => {
+        this.delete(key);
+      });
   }
 }

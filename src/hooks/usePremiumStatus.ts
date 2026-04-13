@@ -5,7 +5,11 @@ import { useAuth } from '@/hooks/useAuth';
 export const usePremiumStatus = () => {
   const { user } = useAuth();
 
-  const { data: premiumStatus, isLoading, refetch } = useQuery({
+  const {
+    data: premiumStatus,
+    isLoading,
+    refetch,
+  } = useQuery({
     queryKey: ['premiumStatus', user?.id],
     queryFn: async () => {
       if (!user?.id) return { isPremium: false, purchasedAt: null };
@@ -23,7 +27,7 @@ export const usePremiumStatus = () => {
 
       return {
         isPremium: data.premium_status || false,
-        purchasedAt: data.premium_purchased_at
+        purchasedAt: data.premium_purchased_at,
       };
     },
     enabled: !!user?.id,
@@ -34,6 +38,6 @@ export const usePremiumStatus = () => {
     isPremium: premiumStatus?.isPremium || false,
     purchasedAt: premiumStatus?.purchasedAt,
     isLoading,
-    refetch
+    refetch,
   };
 };

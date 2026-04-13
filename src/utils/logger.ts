@@ -15,13 +15,17 @@ interface LogEntry {
 
 class Logger {
   private isDevelopment = import.meta.env.DEV;
-  
-  private createLogEntry(level: LogLevel, message: string, data?: any): LogEntry {
+
+  private createLogEntry(
+    level: LogLevel,
+    message: string,
+    data?: any
+  ): LogEntry {
     return {
       level,
       message,
       data,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     };
   }
 
@@ -29,7 +33,7 @@ class Logger {
     if (this.isDevelopment) {
       return true; // Log everything in development
     }
-    
+
     // In production, only log warnings and errors
     return level === 'warn' || level === 'error';
   }
@@ -59,7 +63,7 @@ class Logger {
     if (this.shouldLog('error')) {
       const entry = this.createLogEntry('error', message, data);
       console.error(`❌ [ERROR] ${entry.message}`, entry.data || '');
-      
+
       // In production, could send to external monitoring service
       // this.sendToMonitoring(entry);
     }
@@ -69,7 +73,7 @@ class Logger {
   security(event: string, data?: any): void {
     const entry = this.createLogEntry('error', `SECURITY: ${event}`, data);
     console.error(`🚨 [SECURITY] ${entry.message}`, entry.data || '');
-    
+
     // Always log security events regardless of environment
     // this.sendToSecurityMonitoring(entry);
   }
@@ -78,7 +82,7 @@ class Logger {
   // private sendToMonitoring(entry: LogEntry): void {
   //   // Send to external monitoring service like Sentry, LogRocket, etc.
   // }
-  
+
   // private sendToSecurityMonitoring(entry: LogEntry): void {
   //   // Send security events to security monitoring
   // }

@@ -12,13 +12,17 @@ export class AdRewardValidator {
     if (selectedReward.type === 'coins' && newCoins > currentCoins) {
       return true;
     }
-    
+
     if (selectedReward.type === 'gems' && newGems > currentGems) {
       return true;
     }
-    
+
     // Pour les boosts, on considère que c'est accordé (pas de validation visuelle simple)
-    if (['coin_boost', 'gem_boost', 'growth_speed', 'growth_boost'].includes(selectedReward.type)) {
+    if (
+      ['coin_boost', 'gem_boost', 'growth_speed', 'growth_boost'].includes(
+        selectedReward.type
+      )
+    ) {
       return true;
     }
 
@@ -35,11 +39,11 @@ export class AdRewardValidator {
     if (selectedReward.type === 'coins') {
       return newCoins - currentCoins;
     }
-    
+
     if (selectedReward.type === 'gems') {
       return newGems - currentGems;
     }
-    
+
     return selectedReward.amount;
   }
 }

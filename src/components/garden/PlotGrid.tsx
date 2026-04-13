@@ -18,74 +18,85 @@ interface PlotGridProps {
   onUnlockPlot: (plotNumber: number) => void;
 }
 
-export const PlotGrid = ({ 
-  plots, 
-  plantTypes, 
+export const PlotGrid = ({
+  plots,
+  plantTypes,
   coins,
-  onHarvestPlant, 
-  onUnlockPlot 
+  onHarvestPlant,
+  onUnlockPlot,
 }: PlotGridProps) => {
   const [selectedPlot, setSelectedPlot] = useState<number | null>(null);
   const [showPlantSelector, setShowPlantSelector] = useState(false);
   const [showRobotInterface, setShowRobotInterface] = useState(false);
-  
+
   const { plantDirect, isPlantingPlot } = useDirectPlanting();
   const { getCombinedBoostMultiplier } = useGameMultipliers();
   const { plantStates, getPlantState } = usePlantStates(plots, plantTypes);
-  const { 
-    hasPassiveRobot, 
+  const {
+    hasPassiveRobot,
     robotPlantType,
     claimOfflineRewards,
     calculateOfflineRewards,
     coinsPerMinute,
     currentAccumulation,
-    maxAccumulationReached
+    maxAccumulationReached,
   } = usePassiveIncomeRobot();
 
   // Mémoriser les données des plantes pour éviter les recalculs
   const plantTypeMap = useMemo(() => {
     const map = new Map<string, PlantType>();
-    plantTypes.forEach(pt => map.set(pt.id, pt));
+    plantTypes.forEach((pt) => map.set(pt.id, pt));
     return map;
   }, [plantTypes]);
 
   // Vérifier et réclamer les récompenses hors-ligne au chargement
   useEffect(() => {
     if (hasPassiveRobot && robotPlantType) {
-      calculateOfflineRewards().then(rewards => {
+      calculateOfflineRewards().then((rewards) => {
         if (rewards && rewards.offlineCoins > 0) {
           claimOfflineRewards();
         }
       });
     }
-  }, [hasPassiveRobot, robotPlantType, calculateOfflineRewards, claimOfflineRewards]);
+  }, [
+    hasPassiveRobot,
+    robotPlantType,
+    calculateOfflineRewards,
+    claimOfflineRewards,
+  ]);
 
   // Optimiser le handler de clic avec useCallback
-  const handlePlotClick = useCallback((plot: GardenPlot) => {
-    if (!plot.unlocked) return;
-    
-    // Parcelle 1 avec robot passif actif
-    if (plot.plot_number === 1 && hasPassiveRobot) {
-      setShowRobotInterface(true);
-      return;
-    }
-    
-    const plantState = getPlantState(plot.plot_number);
-    const hasPlant = plantState.status !== 'empty';
-    
-    if (!hasPlant) {
-      setSelectedPlot(plot.plot_number);
-      setShowPlantSelector(true);
-    } else if (plantState.isReady) {
-      // Feedback immédiat optimiste
-      onHarvestPlant(plot.plot_number);
-    }
-  }, [hasPassiveRobot, onHarvestPlant, getPlantState]);
+  const handlePlotClick = useCallback(
+    (plot: GardenPlot) => {
+      if (!plot.unlocked) return;
+
+      // Parcelle 1 avec robot passif actif
+      if (plot.plot_number === 1 && hasPassiveRobot) {
+        setShowRobotInterface(true);
+        return;
+      }
+
+      const plantState = getPlantState(plot.plot_number);
+      const hasPlant = plantState.status !== 'empty';
+
+      if (!hasPlant) {
+        setSelectedPlot(plot.plot_number);
+        setShowPlantSelector(true);
+      } else if (plantState.isReady) {
+        // Feedback immédiat optimiste
+        onHarvestPlant(plot.plot_number);
+      }
+    },
+    [hasPassiveRobot, onHarvestPlant, getPlantState]
+  );
 
   // Optimiser les handlers de sélection
-  const handlePlantSelection = useCallback((plotNumber: number, plantTypeId: string, cost: number) => {
-    plantDirect(plotNumber, plantTypeId, cost);
-  }, [plantDirect]);
+  const handlePlantSelection = useCallback(
+    (plotNumber: number, plantTypeId: string, cost: number) => {
+      plantDirect(plotNumber, plantTypeId, cost);
+    },
+    [plantDirect]
+  );
 
   const handleClosePlantSelector = useCallback(() => {
     setShowPlantSelector(false);
@@ -100,43 +111,58 @@ export const PlotGrid = ({
   const plotsData = useMemo(() => {
     return plots.map((plot) => {
       const isAutoHarvestPlot = plot.plot_number === 1 && hasPassiveRobot;
-      const plantType = isAutoHarvestPlot 
-        ? robotPlantType 
+      const plantType = isAutoHarvestPlot
+        ? robotPlantType
         : plantTypeMap.get(plot.plant_type || '');
-      
+
       // Utiliser maxAccumulationReached du hook (qui vérifie si >= ROBOT_MAX_ACCUMULATION_HOURS)
       const robotAtCapacity = isAutoHarvestPlot && maxAccumulationReached;
-      
+
       const plantState = getPlantState(plot.plot_number);
-      
+
       return {
         plot,
         plantType,
         plantState,
         isAutoHarvestPlot,
-        robotAtCapacity
+        robotAtCapacity,
       };
     });
-  }, [plots, hasPassiveRobot, robotPlantType, plantTypeMap, maxAccumulationReached, getPlantState]);
+  }, [
+    plots,
+    hasPassiveRobot,
+    robotPlantType,
+    plantTypeMap,
+    maxAccumulationReached,
+    getPlantState,
+  ]);
 
   return (
     <>
       <div className="grid grid-cols-3 lg:grid-cols-4 gap-2 sm:gap-3 md:gap-4 p-2 sm:p-4 md:p-6">
-        {plotsData.map(({ plot, plantType, plantState, isAutoHarvestPlot, robotAtCapacity }) => (
-          <PlotCard
-            key={plot.id}
-            plot={plot}
-            plantType={plantType}
-            plantState={plantState}
-            plantTypesCount={plantTypes.length}
-            coins={coins}
-            isPlanting={isPlantingPlot(plot.plot_number)}
-            hasAutoHarvest={isAutoHarvestPlot}
-            robotAtCapacity={robotAtCapacity}
-            onPlotClick={handlePlotClick}
-            onUnlockPlot={onUnlockPlot}
-          />
-        ))}
+        {plotsData.map(
+          ({
+            plot,
+            plantType,
+            plantState,
+            isAutoHarvestPlot,
+            robotAtCapacity,
+          }) => (
+            <PlotCard
+              key={plot.id}
+              plot={plot}
+              plantType={plantType}
+              plantState={plantState}
+              plantTypesCount={plantTypes.length}
+              coins={coins}
+              isPlanting={isPlantingPlot(plot.plot_number)}
+              hasAutoHarvest={isAutoHarvestPlot}
+              robotAtCapacity={robotAtCapacity}
+              onPlotClick={handlePlotClick}
+              onUnlockPlot={onUnlockPlot}
+            />
+          )
+        )}
       </div>
 
       {/* Sélecteur de plante classique */}

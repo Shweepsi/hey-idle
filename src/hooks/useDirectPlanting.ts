@@ -15,7 +15,9 @@ export const useDirectPlanting = () => {
   const calculations = useUnifiedCalculations();
   const queryClient = useQueryClient();
   const { data: gameData } = useGameData();
-  const [plantingPlotNumber, setPlantingPlotNumber] = useState<number | null>(null);
+  const [plantingPlotNumber, setPlantingPlotNumber] = useState<number | null>(
+    null
+  );
   const { triggerCoinAnimation } = useAnimations();
 
   // Cache plant types when gameData is available
@@ -26,13 +28,17 @@ export const useDirectPlanting = () => {
     if (gameData?.garden && gameData?.plots) {
       ValidationCacheService.cachePlayerData({
         garden: gameData.garden,
-        plots: gameData.plots
+        plots: gameData.plots,
       });
     }
   }, [gameData]);
 
   const plantDirectMutation = useMutation({
-    mutationFn: async ({ plotNumber, plantTypeId, expectedCost }: {
+    mutationFn: async ({
+      plotNumber,
+      plantTypeId,
+      expectedCost,
+    }: {
       plotNumber: number;
       plantTypeId: string;
       expectedCost: number;
@@ -50,36 +56,47 @@ export const useDirectPlanting = () => {
 
       // Smart validation using cache
       const cachedPlayerData = ValidationCacheService.getCachedPlayerData();
-      const cachedPlantType = ValidationCacheService.getCachedPlantType(plantTypeId);
+      const cachedPlantType =
+        ValidationCacheService.getCachedPlantType(plantTypeId);
 
       let garden = cachedPlayerData?.garden;
-      let plot = cachedPlayerData?.plots?.find((p: any) => p.plot_number === plotNumber);
+      let plot = cachedPlayerData?.plots?.find(
+        (p: any) => p.plot_number === plotNumber
+      );
       let plantType = cachedPlantType;
 
       // Only fetch from DB if cache miss or critical validation
       if (!garden || !plot || !plantType) {
         logger.debug('Cache miss, fetching from DB');
         const [plotResult, gardenResult, plantTypeResult] = await Promise.all([
-          !plot ? supabase
-            .from('garden_plots')
-            .select('*')
-            .eq('user_id', user.id)
-            .eq('plot_number', plotNumber)
-            .single() : { data: plot, error: null },
-          !garden ? supabase
-            .from('player_gardens')
-            .select('*')
-            .eq('user_id', user.id)
-            .single() : { data: garden, error: null },
-          !plantType ? supabase
-            .from('plant_types')
-            .select('*')
-            .eq('id', plantTypeId)
-            .single() : { data: plantType, error: null }
+          !plot
+            ? supabase
+                .from('garden_plots')
+                .select('*')
+                .eq('user_id', user.id)
+                .eq('plot_number', plotNumber)
+                .single()
+            : { data: plot, error: null },
+          !garden
+            ? supabase
+                .from('player_gardens')
+                .select('*')
+                .eq('user_id', user.id)
+                .single()
+            : { data: garden, error: null },
+          !plantType
+            ? supabase
+                .from('plant_types')
+                .select('*')
+                .eq('id', plantTypeId)
+                .single()
+            : { data: plantType, error: null },
         ]);
 
-        if (plotResult.error) throw new Error(`Plot error: ${plotResult.error.message}`);
-        if (gardenResult.error) throw new Error(`Garden error: ${gardenResult.error.message}`);
+        if (plotResult.error)
+          throw new Error(`Plot error: ${plotResult.error.message}`);
+        if (gardenResult.error)
+          throw new Error(`Garden error: ${gardenResult.error.message}`);
         if (plantTypeResult.error) throw new Error('Plant type not found');
 
         plot = plotResult.data;
@@ -89,11 +106,13 @@ export const useDirectPlanting = () => {
 
       // Quick client-side pre-validation for UX only; server is authoritative.
       if (!plot?.unlocked) throw new Error('Plot not unlocked');
-      if (plot.plant_type || plot.planted_at) throw new Error('Plot already occupied');
+      if (plot.plant_type || plot.planted_at)
+        throw new Error('Plot already occupied');
 
       const playerLevel = garden.level || 1;
       const requiredLevel = plantType.level_required || 1;
-      if (playerLevel < requiredLevel) throw new Error(`Level ${requiredLevel} required`);
+      if (playerLevel < requiredLevel)
+        throw new Error(`Level ${requiredLevel} required`);
 
       if (garden.coins < expectedCost) {
         throw new Error('Insufficient coins');
@@ -102,11 +121,14 @@ export const useDirectPlanting = () => {
       logger.debug(`Using atomic DB function for plot ${plotNumber}`);
 
       // Server computes cost + growth time from plant_types + upgrades.
-      const { data: result, error } = await supabase.rpc('plant_direct_atomic', {
-        p_user_id: user.id,
-        p_plot_number: plotNumber,
-        p_plant_type_id: plantTypeId
-      });
+      const { data: result, error } = await supabase.rpc(
+        'plant_direct_atomic',
+        {
+          p_user_id: user.id,
+          p_plot_number: plotNumber,
+          p_plant_type_id: plantTypeId,
+        }
+      );
 
       if (error) {
         logger.error('Atomic function error', error);
@@ -139,58 +161,63 @@ export const useDirectPlanting = () => {
         plotNumber,
         plantTypeId,
         actualCost: serverCost,
-        adjustedGrowthTime: typedResult.growth_time_seconds ?? (plantType.base_growth_seconds || 60),
+        adjustedGrowthTime:
+          typedResult.growth_time_seconds ??
+          (plantType.base_growth_seconds || 60),
         plantedAt: typedResult.planted_at || new Date().toISOString(),
-        newCoinBalance: typedResult.new_coin_balance ?? ((garden.coins || 0) - serverCost)
+        newCoinBalance:
+          typedResult.new_coin_balance ?? (garden.coins || 0) - serverCost,
       };
     },
     onMutate: async ({ plotNumber, plantTypeId, expectedCost }) => {
       logger.debug('Optimistic update enabled');
-      
+
       // Cancel outgoing refetches so they don't override optimistic update
       await queryClient.cancelQueries({ queryKey: ['gameData', user?.id] });
-      
+
       // Snapshot previous value
       const previousData = queryClient.getQueryData(['gameData', user?.id]);
-      
+
       // Optimistically update to new value
       if (previousData) {
         queryClient.setQueryData(['gameData', user?.id], (old: any) => {
           if (!old?.garden || !old?.plots) return old;
-          
+
           const updatedPlots = old.plots.map((plot: any) => {
             if (plot.plot_number === plotNumber) {
               return {
                 ...plot,
                 plant_type: plantTypeId,
                 planted_at: new Date().toISOString(),
-                growth_time_seconds: old.plantTypes?.find((pt: any) => pt.id === plantTypeId)?.base_growth_seconds || 60,
-                updated_at: new Date().toISOString()
+                growth_time_seconds:
+                  old.plantTypes?.find((pt: any) => pt.id === plantTypeId)
+                    ?.base_growth_seconds || 60,
+                updated_at: new Date().toISOString(),
               };
             }
             return plot;
           });
-          
+
           return {
             ...old,
             garden: {
               ...old.garden,
-              coins: old.garden.coins - expectedCost
+              coins: old.garden.coins - expectedCost,
             },
-            plots: updatedPlots
+            plots: updatedPlots,
           };
         });
       }
-      
+
       return { previousData };
     },
     onSuccess: (data) => {
       // Confirmation serveur - forcer un refresh complet
       logger.debug('Plantation confirmed by server');
-      
+
       // Invalider et refetch pour synchroniser avec la DB
       queryClient.invalidateQueries({ queryKey: ['gameData', user?.id] });
-      
+
       // Réinitialiser l'état de plantation
       setPlantingPlotNumber(null);
     },
@@ -199,21 +226,23 @@ export const useDirectPlanting = () => {
       if (context?.previousData) {
         queryClient.setQueryData(['gameData', user?.id], context.previousData);
       }
-      
+
       logger.error('Error during direct planting', error);
       toast.error(error.message || 'Erreur lors de la plantation');
-      
+
       // Réinitialiser l'état de plantation en cas d'erreur
       setPlantingPlotNumber(null);
-    }
+    },
   });
 
-
   return {
-    plantDirect: (plotNumber: number, plantTypeId: string, expectedCost: number) => 
-      plantDirectMutation.mutate({ plotNumber, plantTypeId, expectedCost }),
+    plantDirect: (
+      plotNumber: number,
+      plantTypeId: string,
+      expectedCost: number
+    ) => plantDirectMutation.mutate({ plotNumber, plantTypeId, expectedCost }),
     isPlanting: plantDirectMutation.isPending,
     isPlantingPlot: (plotNumber: number) => plantingPlotNumber === plotNumber,
-    getActiveMultipliers: () => calculations.multipliers
+    getActiveMultipliers: () => calculations.multipliers,
   };
 };

@@ -1,6 +1,12 @@
 import React, { Component, ErrorInfo, ReactNode } from 'react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { AlertTriangle, RefreshCw, Home } from 'lucide-react';
 
 interface Props {
@@ -27,7 +33,7 @@ export class ErrorBoundary extends Component<Props, State> {
     console.error('ErrorBoundary caught an error:', error, errorInfo);
     this.setState({
       error,
-      errorInfo
+      errorInfo,
     });
   }
 
@@ -57,14 +63,15 @@ export class ErrorBoundary extends Component<Props, State> {
                   Oups ! Une erreur s'est produite
                 </CardTitle>
                 <CardDescription className="text-muted-foreground mt-2">
-                  Votre jardin a rencontré un problème technique. Pas de panique, vos données sont sauvegardées !
+                  Votre jardin a rencontré un problème technique. Pas de
+                  panique, vos données sont sauvegardées !
                 </CardDescription>
               </div>
             </CardHeader>
-            
+
             <CardContent className="space-y-4">
               <div className="flex flex-col gap-3">
-                <Button 
+                <Button
                   onClick={this.handleReset}
                   variant="default"
                   className="w-full"
@@ -72,16 +79,16 @@ export class ErrorBoundary extends Component<Props, State> {
                   <RefreshCw className="w-4 h-4 mr-2" />
                   Réessayer
                 </Button>
-                
-                <Button 
+
+                <Button
                   onClick={this.handleReload}
                   variant="outline"
                   className="w-full"
                 >
                   Recharger la page
                 </Button>
-                
-                <Button 
+
+                <Button
                   onClick={this.handleGoHome}
                   variant="secondary"
                   className="w-full"
@@ -90,7 +97,7 @@ export class ErrorBoundary extends Component<Props, State> {
                   Retour au jardin
                 </Button>
               </div>
-              
+
               {process.env.NODE_ENV === 'development' && this.state.error && (
                 <details className="mt-6 p-3 bg-muted rounded-lg text-xs">
                   <summary className="cursor-pointer font-semibold text-muted-foreground">

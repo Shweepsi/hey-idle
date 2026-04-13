@@ -8,7 +8,7 @@ interface AudioContextType {
   playSound: (soundType: SoundType) => void;
 }
 
-export type SoundType = 
+export type SoundType =
   | 'plant'
   | 'harvest'
   | 'coin'
@@ -37,15 +37,15 @@ export const AudioProvider = ({ children }: { children: React.ReactNode }) => {
   // Charger les sons - mapper les 4 sons disponibles
   useEffect(() => {
     const sounds: Record<SoundType, string> = {
-      plant: '/sounds/purchase.mp3',     // Son d'achat pour planter
-      harvest: '/sounds/coin.mp3',        // Son de pièce pour récolter
-      coin: '/sounds/coin.mp3',           // Son de pièce
-      gems: '/sounds/coin.mp3',           // Son de pièce pour les gemmes
-      purchase: '/sounds/purchase.mp3',   // Son d'achat
-      upgrade: '/sounds/upgrade.mp3',     // Son d'amélioration
+      plant: '/sounds/purchase.mp3', // Son d'achat pour planter
+      harvest: '/sounds/coin.mp3', // Son de pièce pour récolter
+      coin: '/sounds/coin.mp3', // Son de pièce
+      gems: '/sounds/coin.mp3', // Son de pièce pour les gemmes
+      purchase: '/sounds/purchase.mp3', // Son d'achat
+      upgrade: '/sounds/upgrade.mp3', // Son d'amélioration
       achievement: '/sounds/upgrade.mp3', // Son d'amélioration pour succès
-      error: '/sounds/error.mp3',         // Son d'erreur
-      robot: '/sounds/coin.mp3',          // Son de pièce pour robot
+      error: '/sounds/error.mp3', // Son d'erreur
+      robot: '/sounds/coin.mp3', // Son de pièce pour robot
     };
 
     Object.entries(sounds).forEach(([type, src]) => {
@@ -56,7 +56,7 @@ export const AudioProvider = ({ children }: { children: React.ReactNode }) => {
     });
 
     return () => {
-      audioElements.forEach(audio => {
+      audioElements.forEach((audio) => {
         audio.pause();
         audio.src = '';
       });
@@ -65,7 +65,7 @@ export const AudioProvider = ({ children }: { children: React.ReactNode }) => {
 
   // Gérer le volume des sons
   useEffect(() => {
-    audioElements.forEach(audio => {
+    audioElements.forEach((audio) => {
       audio.volume = soundVolume / 100;
     });
   }, [soundVolume, audioElements]);

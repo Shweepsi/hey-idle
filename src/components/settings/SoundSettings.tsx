@@ -1,4 +1,10 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Slider } from '@/components/ui/slider';
@@ -6,12 +12,8 @@ import { Volume2, VolumeX } from 'lucide-react';
 import { useAudio } from '@/contexts/AudioContext';
 
 export const SoundSettings = () => {
-  const {
-    soundEnabled,
-    setSoundEnabled,
-    soundVolume,
-    setSoundVolume,
-  } = useAudio();
+  const { soundEnabled, setSoundEnabled, soundVolume, setSoundVolume } =
+    useAudio();
 
   return (
     <Card>
@@ -20,9 +22,7 @@ export const SoundSettings = () => {
           <Volume2 className="h-5 w-5" />
           Effets sonores
         </CardTitle>
-        <CardDescription>
-          Contrôlez le volume des sons du jeu
-        </CardDescription>
+        <CardDescription>Contrôlez le volume des sons du jeu</CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
         {/* Toggle principal */}
@@ -47,7 +47,10 @@ export const SoundSettings = () => {
             {/* Contrôle du volume */}
             <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <Label htmlFor="sound-volume" className="text-sm font-medium flex items-center gap-2">
+                <Label
+                  htmlFor="sound-volume"
+                  className="text-sm font-medium flex items-center gap-2"
+                >
                   {soundVolume > 0 ? (
                     <Volume2 className="h-4 w-4 text-primary" />
                   ) : (

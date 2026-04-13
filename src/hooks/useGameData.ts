@@ -1,4 +1,3 @@
-
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
@@ -19,7 +18,6 @@ export const useGameData = () => {
     // const cleanupInterval = setInterval(() => {
     //   UnifiedCalculationService.clearCache();
     // }, 300000); // Clean up every 5 minutes
-
     // return () => {
     //   clearInterval(cleanupInterval);
     // };
@@ -33,9 +31,17 @@ export const useGameData = () => {
       logger.debug('Fetching fresh game data for user', user.id);
 
       const [gardenResult, plotsResult, plantTypesResult] = await Promise.all([
-        supabase.from('player_gardens').select('*').eq('user_id', user.id).single(),
-        supabase.from('garden_plots').select('*').eq('user_id', user.id).order('plot_number'),
-        supabase.from('plant_types').select('*')
+        supabase
+          .from('player_gardens')
+          .select('*')
+          .eq('user_id', user.id)
+          .single(),
+        supabase
+          .from('garden_plots')
+          .select('*')
+          .eq('user_id', user.id)
+          .order('plot_number'),
+        supabase.from('plant_types').select('*'),
       ]);
 
       const result = {
@@ -45,13 +51,14 @@ export const useGameData = () => {
       };
 
       // LOG détaillé de l'état des parcelles pour debug
-      logger.debug('Game data fetched - Plots status', 
-        result.plots.map(p => ({
+      logger.debug(
+        'Game data fetched - Plots status',
+        result.plots.map((p) => ({
           plot: p.plot_number,
           unlocked: p.unlocked,
           plant_type: p.plant_type,
           planted_at: p.planted_at,
-          isEmpty: p.plant_type === null && p.planted_at === null
+          isEmpty: p.plant_type === null && p.planted_at === null,
         }))
       );
 
@@ -68,28 +75,30 @@ export const useGameData = () => {
     refetchInterval: (query) => {
       const data = query.state.data;
       if (!data?.plots) return 10000; // 10 seconds default
-      
+
       // Check if there are growing plants (simplified without hooks)
-      const growingPlants = data.plots.filter(plot => {
+      const growingPlants = data.plots.filter((plot) => {
         if (!plot.planted_at || !plot.plant_type) return false;
-        
-        const plantType = data.plantTypes?.find(pt => pt.id === plot.plant_type);
+
+        const plantType = data.plantTypes?.find(
+          (pt) => pt.id === plot.plant_type
+        );
         if (!plantType) return false;
-        
+
         // Simple ready check without multipliers to avoid circular dependency
         const plantedAt = new Date(plot.planted_at).getTime();
         const now = Date.now();
         const baseGrowthTime = (plantType.base_growth_seconds || 60) * 1000;
         const timePassed = now - plantedAt;
-        
+
         return timePassed < baseGrowthTime; // Still growing
       });
-      
+
       // Reduce polling when no activity
       if (growingPlants.length === 0) {
         return 60000; // 1 minute if no plants growing
       }
-      
+
       return 5000; // 5 seconds when plants are growing
     },
     // PHASE 1: Ultra-reactive for rewards with dynamic stale time

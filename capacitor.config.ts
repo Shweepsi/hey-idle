@@ -1,4 +1,3 @@
-
 import { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
@@ -6,14 +5,14 @@ const config: CapacitorConfig = {
   appName: 'Idle Grow',
   webDir: 'dist',
   server: {
-    androidScheme: 'https'
+    androidScheme: 'https',
   },
   plugins: {
     AdMob: {
       appId: 'ca-app-pub-4824355487707598~3701914540',
-      requestTrackingAuthorization: true
-    }
-  }
+      requestTrackingAuthorization: true,
+    },
+  },
 };
 
 export default config;

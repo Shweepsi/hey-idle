@@ -11,10 +11,7 @@ import { App as CapacitorApp } from '@capacitor/app';
  * @param enabled  Active / désactive le listener.
  * @param handler  Fonction appelée lors du back press.
  */
-export const useAndroidBackButton = (
-  enabled: boolean,
-  handler: () => void,
-) => {
+export const useAndroidBackButton = (enabled: boolean, handler: () => void) => {
   useEffect(() => {
     if (!enabled) return;
 
@@ -35,7 +32,7 @@ export const useAndroidBackButton = (
     };
 
     let cleanup: (() => void) | undefined;
-    setupListener().then(cleanupFn => {
+    setupListener().then((cleanupFn) => {
       cleanup = cleanupFn;
     });
 

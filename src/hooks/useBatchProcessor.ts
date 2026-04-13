@@ -21,28 +21,31 @@ export const useBatchProcessor = <T, R>(
     batchRef.current = [];
 
     try {
-      const results = await processor(batch.map(item => item.data));
+      const results = await processor(batch.map((item) => item.data));
       batch.forEach((item, index) => {
         item.resolve(results[index]);
       });
     } catch (error) {
-      batch.forEach(item => {
+      batch.forEach((item) => {
         item.reject(error);
       });
     }
   }, [processor]);
 
-  const addToBatch = useCallback((id: string, data: T): Promise<R> => {
-    return new Promise((resolve, reject) => {
-      batchRef.current.push({ id, data, resolve, reject });
+  const addToBatch = useCallback(
+    (id: string, data: T): Promise<R> => {
+      return new Promise((resolve, reject) => {
+        batchRef.current.push({ id, data, resolve, reject });
 
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
-      }
+        if (timeoutRef.current) {
+          clearTimeout(timeoutRef.current);
+        }
 
-      timeoutRef.current = setTimeout(processBatch, delay);
-    });
-  }, [processBatch, delay]);
+        timeoutRef.current = setTimeout(processBatch, delay);
+      });
+    },
+    [processBatch, delay]
+  );
 
   return { addToBatch };
 };

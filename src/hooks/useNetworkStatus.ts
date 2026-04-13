@@ -17,62 +17,64 @@ export function useNetworkStatus() {
 
   useEffect(() => {
     const handleOnline = () => {
-      setNetworkStatus(prev => ({
+      setNetworkStatus((prev) => ({
         ...prev,
         isOnline: true,
         lastOnlineAt: new Date(),
       }));
-      
+
       toast({
-        title: "Connexion rétablie",
-        description: "Vous êtes de nouveau en ligne. Votre jardin se synchronise...",
+        title: 'Connexion rétablie',
+        description:
+          'Vous êtes de nouveau en ligne. Votre jardin se synchronise...',
       });
     };
 
     const handleOffline = () => {
-      setNetworkStatus(prev => ({
+      setNetworkStatus((prev) => ({
         ...prev,
         isOnline: false,
       }));
-      
+
       toast({
-        variant: "destructive",
-        title: "Connexion perdue",
-        description: "Mode hors ligne activé. Certaines fonctionnalités sont limitées.",
+        variant: 'destructive',
+        title: 'Connexion perdue',
+        description:
+          'Mode hors ligne activé. Certaines fonctionnalités sont limitées.',
       });
     };
 
     // Détection de connexion lente (plus de 4 secondes pour une requête)
     const detectSlowConnection = async () => {
       if (!navigator.onLine) return;
-      
+
       const startTime = Date.now();
       try {
-        await fetch('/ping', { 
+        await fetch('/ping', {
           method: 'HEAD',
           cache: 'no-cache',
-          signal: AbortSignal.timeout(4000)
+          signal: AbortSignal.timeout(4000),
         });
-        
+
         const duration = Date.now() - startTime;
         const isSlowConnection = duration > 2000;
-        
-        setNetworkStatus(prev => ({
+
+        setNetworkStatus((prev) => ({
           ...prev,
-          isSlowConnection
+          isSlowConnection,
         }));
-        
+
         if (isSlowConnection && !networkStatus.isSlowConnection) {
           toast({
-            title: "Connexion lente détectée",
-            description: "Les temps de chargement peuvent être plus longs.",
+            title: 'Connexion lente détectée',
+            description: 'Les temps de chargement peuvent être plus longs.',
           });
         }
       } catch (error) {
         // Connexion probablement lente ou indisponible
-        setNetworkStatus(prev => ({
+        setNetworkStatus((prev) => ({
           ...prev,
-          isSlowConnection: true
+          isSlowConnection: true,
         }));
       }
     };

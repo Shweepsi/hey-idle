@@ -1,4 +1,3 @@
-
 export interface PlantType {
   id: string;
   name: string;

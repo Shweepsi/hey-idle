@@ -16,15 +16,15 @@ export const ROBOT_UPDATE_INTERVAL = 1000; // 1 seconde
 
 // Configuration de l'affichage
 export const UPDATE_INTERVALS = {
-  FAST: 5000,   // 5s pour croissance < 5min
+  FAST: 5000, // 5s pour croissance < 5min
   MEDIUM: 15000, // 15s pour croissance < 30min
-  SLOW: 30000   // 30s pour croissance >= 30min
+  SLOW: 30000, // 30s pour croissance >= 30min
 };
 
 // Seuils d'affichage des nombres
 export const NUMBER_FORMAT_THRESHOLDS = {
   THOUSAND: 1000,
-  MILLION: 1000000
+  MILLION: 1000000,
 };
 
 // Configuration du prestige

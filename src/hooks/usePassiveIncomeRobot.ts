@@ -31,31 +31,33 @@ export const usePassiveIncomeRobot = () => {
       logger.debug(`[Robot] ${message}`);
     }
   };
-  
+
   // Récupérer les améliorations du joueur
   const { data: playerUpgrades = [] } = useQuery({
     queryKey: ['playerUpgrades', user?.id],
     queryFn: async () => {
       if (!user?.id) return [];
-      
+
       const { data, error } = await supabase
         .from('player_upgrades')
-        .select(`
+        .select(
+          `
           *,
           level_upgrades(*)
-        `)
+        `
+        )
         .eq('user_id', user.id)
         .eq('active', true);
-      
+
       if (error) throw error;
       return data;
     },
-    enabled: !!user?.id
+    enabled: !!user?.id,
   });
 
   // Vérifier si l'amélioration robot passif est débloquée
-  const hasPassiveRobot = playerUpgrades.some(upgrade => 
-    upgrade.level_upgrades?.effect_type === 'auto_harvest'
+  const hasPassiveRobot = playerUpgrades.some(
+    (upgrade) => upgrade.level_upgrades?.effect_type === 'auto_harvest'
   );
 
   // Calculer le niveau du robot et la plante correspondante
@@ -74,7 +76,7 @@ export const usePassiveIncomeRobot = () => {
 
       return plantType;
     },
-    enabled: hasPassiveRobot && robotPlantLevel > 0
+    enabled: hasPassiveRobot && robotPlantLevel > 0,
   });
 
   // Récupérer l'état du robot passif
@@ -92,24 +94,24 @@ export const usePassiveIncomeRobot = () => {
       return {
         lastCollected: garden?.robot_last_collected || new Date().toISOString(),
         accumulatedCoins: garden?.robot_accumulated_coins || 0,
-        robotLevel
+        robotLevel,
       };
     },
-    enabled: !!user?.id && hasPassiveRobot
+    enabled: !!user?.id && hasPassiveRobot,
   });
 
   // Calcul du revenu passif en temps réel
   const getCoinsPerMinute = () => {
     if (!hasPassiveRobot || !robotPlantType) return 0;
-    
+
     // Utiliser UNIQUEMENT les multiplicateurs permanents (pas les boosts publicitaires)
     const permanentMultipliers = getPermanentMultipliersOnly();
     const permanentMultiplier = gameData?.garden?.permanent_multiplier || 1;
-    
+
     // Appeler directement le service avec les multiplicateurs permanents
     return UnifiedCalculationService.getRobotPassiveIncome(
-      robotLevel, 
-      permanentMultipliers.harvest,  // Multiplicateur de récolte permanent uniquement
+      robotLevel,
+      permanentMultipliers.harvest, // Multiplicateur de récolte permanent uniquement
       permanentMultiplier
     );
   };
@@ -117,12 +119,15 @@ export const usePassiveIncomeRobot = () => {
   // Synchroniser le robot avec son niveau quand il change
   useEffect(() => {
     if (!gameData?.garden) return;
-    
-    const currentRobotLevel = UnifiedCalculationService.getRobotLevel(playerUpgrades);
-    
+
+    const currentRobotLevel =
+      UnifiedCalculationService.getRobotLevel(playerUpgrades);
+
     // Vérifier si le robot_level dans la DB correspond au niveau calculé
     if (gameData.garden.robot_level !== currentRobotLevel) {
-      logger.debug(`Robot level sync: ${gameData.garden.robot_level} -> ${currentRobotLevel}`);
+      logger.debug(
+        `Robot level sync: ${gameData.garden.robot_level} -> ${currentRobotLevel}`
+      );
       // La synchronisation sera automatique grâce au trigger
     }
   }, [gameData?.garden, playerUpgrades]);
@@ -134,7 +139,8 @@ export const usePassiveIncomeRobot = () => {
     if (gameData.garden.robot_last_collected !== null) return;
 
     logger.debug('First robot activation detected - calling RPC');
-    supabase.rpc('collect_robot_income_atomic', { p_user_id: user.id })
+    supabase
+      .rpc('collect_robot_income_atomic', { p_user_id: user.id })
       .then(() => {
         queryClient.invalidateQueries({ queryKey: ['gameData'] });
         queryClient.invalidateQueries({ queryKey: ['passiveRobotState'] });
@@ -145,29 +151,39 @@ export const usePassiveIncomeRobot = () => {
   // Calcul de l'accumulation totale disponible (simplifié pour éviter le double calcul)
   const calculateCurrentAccumulation = useCallback(() => {
     // Return 0 if robot is not unlocked or has never been activated (robot_last_collected is null)
-    if (!hasPassiveRobot || !robotState || !robotPlantType || !robotState.lastCollected) return 0;
-    
+    if (
+      !hasPassiveRobot ||
+      !robotState ||
+      !robotPlantType ||
+      !robotState.lastCollected
+    )
+      return 0;
+
     const coinsPerMinute = getCoinsPerMinute();
     const now = new Date();
     const lastCollected = new Date(robotState.lastCollected);
-    const minutesElapsed = Math.floor((now.getTime() - lastCollected.getTime()) / (1000 * 60));
-    
+    const minutesElapsed = Math.floor(
+      (now.getTime() - lastCollected.getTime()) / (1000 * 60)
+    );
+
     // Vérification de sécurité : limite configurable d'accumulation
     const maxMinutes = ROBOT_MAX_ACCUMULATION_HOURS * 60;
     const safeMinutesElapsed = Math.min(minutesElapsed, maxMinutes);
-    
+
     // Garde-fou : si l'écart est anormalement grand, utiliser seulement l'accumulation stockée
     if (safeMinutesElapsed > maxMinutes || minutesElapsed < 0) {
-      logger.warn(`Abnormal time gap detected: ${minutesElapsed}min, using stored accumulation only`);
+      logger.warn(
+        `Abnormal time gap detected: ${minutesElapsed}min, using stored accumulation only`
+      );
       return robotState.accumulatedCoins;
     }
-    
+
     // Calcul UNIQUEMENT des nouveaux revenus depuis la dernière collecte
     const freshAccumulation = safeMinutesElapsed * coinsPerMinute;
     const storedCoins = robotState.accumulatedCoins;
     const totalAccumulation = storedCoins + freshAccumulation;
     const maxAccumulation = coinsPerMinute * maxMinutes;
-    
+
     return Math.min(totalAccumulation, maxAccumulation);
   }, [hasPassiveRobot, robotState, robotPlantType, getCoinsPerMinute]);
 
@@ -186,7 +202,7 @@ export const usePassiveIncomeRobot = () => {
     const lastPlayed = new Date(garden.last_played).getTime();
     const lastCollected = new Date(garden.robot_last_collected).getTime();
     const now = Date.now();
-    
+
     // Prendre le plus récent entre last_played et robot_last_collected
     const startTime = Math.max(lastPlayed, lastCollected);
     const timeOffline = now - startTime;
@@ -197,18 +213,20 @@ export const usePassiveIncomeRobot = () => {
     const minutesOffline = Math.floor(timeOffline / (1000 * 60));
     const maxMinutes = ROBOT_MAX_ACCUMULATION_HOURS * 60;
     const safeMinutesOffline = Math.min(minutesOffline, maxMinutes);
-    
+
     const offlineCoins = safeMinutesOffline * coinsPerMinute;
 
     if (offlineCoins <= 0) return null;
 
-    logger.debug(`Offline rewards: ${safeMinutesOffline}min × ${coinsPerMinute} = ${offlineCoins} coins`);
+    logger.debug(
+      `Offline rewards: ${safeMinutesOffline}min × ${coinsPerMinute} = ${offlineCoins} coins`
+    );
 
     return {
       offlineCoins,
       minutesOffline: safeMinutesOffline,
       plantName: robotPlantType.display_name,
-      coinsPerMinute
+      coinsPerMinute,
     };
   };
 
@@ -217,9 +235,12 @@ export const usePassiveIncomeRobot = () => {
     mutationFn: async () => {
       if (!user?.id) return null;
 
-      const { data, error } = await supabase.rpc('collect_robot_income_atomic', {
-        p_user_id: user.id
-      });
+      const { data, error } = await supabase.rpc(
+        'collect_robot_income_atomic',
+        {
+          p_user_id: user.id,
+        }
+      );
 
       if (error) throw error;
 
@@ -235,8 +256,13 @@ export const usePassiveIncomeRobot = () => {
       if (!result.success) throw new Error(result.error || 'Collecte échouée');
       if (result.first_activation || (result.collected ?? 0) <= 0) return null;
 
-      logger.debug(`Robot collection successful: ${result.collected} coins + ${result.exp_reward} EXP (level ${result.robot_level})`);
-      return { totalAccumulated: result.collected!, expReward: result.exp_reward! };
+      logger.debug(
+        `Robot collection successful: ${result.collected} coins + ${result.exp_reward} EXP (level ${result.robot_level})`
+      );
+      return {
+        totalAccumulated: result.collected!,
+        expReward: result.exp_reward!,
+      };
     },
     onSuccess: (result) => {
       if (result) {
@@ -248,7 +274,7 @@ export const usePassiveIncomeRobot = () => {
     },
     onError: (error: any) => {
       showRobotError(error.message || 'Erreur lors de la collecte');
-    }
+    },
   });
 
   // Mutation pour réclamer les récompenses hors-ligne (via same server RPC)
@@ -256,9 +282,12 @@ export const usePassiveIncomeRobot = () => {
     mutationFn: async () => {
       if (!user?.id) return null;
 
-      const { data, error } = await supabase.rpc('collect_robot_income_atomic', {
-        p_user_id: user.id
-      });
+      const { data, error } = await supabase.rpc(
+        'collect_robot_income_atomic',
+        {
+          p_user_id: user.id,
+        }
+      );
 
       if (error) throw error;
 
@@ -269,12 +298,13 @@ export const usePassiveIncomeRobot = () => {
         coins_per_minute?: number;
       };
 
-      if (!result.success) throw new Error(result.error || 'Réclamation échouée');
+      if (!result.success)
+        throw new Error(result.error || 'Réclamation échouée');
       if ((result.collected ?? 0) <= 0) return null;
 
       return {
         offlineCoins: result.collected!,
-        coinsPerMinute: result.coins_per_minute ?? 0
+        coinsPerMinute: result.coins_per_minute ?? 0,
       };
     },
     onSuccess: () => {
@@ -283,7 +313,7 @@ export const usePassiveIncomeRobot = () => {
     },
     onError: (error: any) => {
       showRobotError(error.message || 'Erreur lors de la réclamation');
-    }
+    },
   });
 
   // Synchronisation du timestamp robot via RPC (collecte + reset)
@@ -314,11 +344,12 @@ export const usePassiveIncomeRobot = () => {
     robotLevel,
     maxAccumulationReached,
     collectAccumulatedCoins: () => collectAccumulatedCoinsMutation.mutate(),
-    collectAccumulatedCoinsAsync: () => collectAccumulatedCoinsMutation.mutateAsync(),
+    collectAccumulatedCoinsAsync: () =>
+      collectAccumulatedCoinsMutation.mutateAsync(),
     claimOfflineRewards: () => claimOfflineRewardsMutation.mutate(),
     calculateOfflineRewards,
     syncRobotTimestamp,
     isCollecting: collectAccumulatedCoinsMutation.isPending,
-    isClaimingRewards: claimOfflineRewardsMutation.isPending
+    isClaimingRewards: claimOfflineRewardsMutation.isPending,
   };
 };

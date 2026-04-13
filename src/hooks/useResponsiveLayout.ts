@@ -3,10 +3,10 @@ import { useState, useEffect } from 'react';
 interface ScreenInfo {
   width: number;
   height: number;
-  isXs: boolean;      // 360px+
-  isSm: boolean;      // 414px+
-  isMd: boolean;      // 768px+
-  isLg: boolean;      // 1024px+
+  isXs: boolean; // 360px+
+  isSm: boolean; // 414px+
+  isMd: boolean; // 768px+
+  isLg: boolean; // 1024px+
   isTouch: boolean;
   isLandscape: boolean;
   devicePixelRatio: number;
@@ -31,13 +31,13 @@ export function useResponsiveLayout() {
         isTouch: false,
         isLandscape: false,
         devicePixelRatio: 1,
-        safeAreaInsets: { top: 0, bottom: 0, left: 0, right: 0 }
+        safeAreaInsets: { top: 0, bottom: 0, left: 0, right: 0 },
       };
     }
 
     const width = window.innerWidth;
     const height = window.innerHeight;
-    
+
     return {
       width,
       height,
@@ -48,17 +48,20 @@ export function useResponsiveLayout() {
       isTouch: 'ontouchstart' in window || navigator.maxTouchPoints > 0,
       isLandscape: width > height,
       devicePixelRatio: window.devicePixelRatio || 1,
-      safeAreaInsets: getSafeAreaInsets()
+      safeAreaInsets: getSafeAreaInsets(),
     };
   });
 
   function getSafeAreaInsets() {
-    if (typeof window === 'undefined') return { top: 0, bottom: 0, left: 0, right: 0 };
-    
+    if (typeof window === 'undefined')
+      return { top: 0, bottom: 0, left: 0, right: 0 };
+
     const style = getComputedStyle(document.documentElement);
     return {
       top: parseInt(style.getPropertyValue('--safe-area-inset-top') || '0'),
-      bottom: parseInt(style.getPropertyValue('--safe-area-inset-bottom') || '0'),
+      bottom: parseInt(
+        style.getPropertyValue('--safe-area-inset-bottom') || '0'
+      ),
       left: parseInt(style.getPropertyValue('--safe-area-inset-left') || '0'),
       right: parseInt(style.getPropertyValue('--safe-area-inset-right') || '0'),
     };
@@ -68,7 +71,7 @@ export function useResponsiveLayout() {
     const updateScreenInfo = () => {
       const width = window.innerWidth;
       const height = window.innerHeight;
-      
+
       setScreenInfo({
         width,
         height,
@@ -79,7 +82,7 @@ export function useResponsiveLayout() {
         isTouch: 'ontouchstart' in window || navigator.maxTouchPoints > 0,
         isLandscape: width > height,
         devicePixelRatio: window.devicePixelRatio || 1,
-        safeAreaInsets: getSafeAreaInsets()
+        safeAreaInsets: getSafeAreaInsets(),
       });
     };
 

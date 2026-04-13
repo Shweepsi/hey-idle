@@ -1,4 +1,10 @@
-import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  ReactNode,
+} from 'react';
 
 // Update frequency for the shared garden clock (ms). Optimized for performance.
 const DEFAULT_CLOCK_INTERVAL = 1000;
@@ -17,7 +23,10 @@ interface GardenClockProviderProps {
   interval?: number;
 }
 
-export const GardenClockProvider = ({ children, interval = DEFAULT_CLOCK_INTERVAL }: GardenClockProviderProps) => {
+export const GardenClockProvider = ({
+  children,
+  interval = DEFAULT_CLOCK_INTERVAL,
+}: GardenClockProviderProps) => {
   const [time, setTime] = useState<number>(() => Date.now());
 
   useEffect(() => {
@@ -28,7 +37,9 @@ export const GardenClockProvider = ({ children, interval = DEFAULT_CLOCK_INTERVA
   }, [interval]);
 
   return (
-    <GardenClockContext.Provider value={time}>{children}</GardenClockContext.Provider>
+    <GardenClockContext.Provider value={time}>
+      {children}
+    </GardenClockContext.Provider>
   );
 };
 

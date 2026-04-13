@@ -1,4 +1,3 @@
-
 import React, { useEffect, useMemo } from 'react';
 import { Coins, Star } from 'lucide-react';
 import { FloatingAnimation, useAnimations } from '@/contexts/AnimationContext';
@@ -7,14 +6,19 @@ interface FloatingNumberProps {
   animation: FloatingAnimation;
 }
 
-export const FloatingNumber: React.FC<FloatingNumberProps> = ({ animation }) => {
+export const FloatingNumber: React.FC<FloatingNumberProps> = ({
+  animation,
+}) => {
   const { removeAnimation } = useAnimations();
 
   // Durée totale de l'animation (doit rester cohérente avec celle définie dans le CSS)
   const DURATION_MS = 2000;
 
   // Calcule le temps écoulé depuis la création de l'animation
-  const elapsed = useMemo(() => Date.now() - animation.timestamp, [animation.timestamp]);
+  const elapsed = useMemo(
+    () => Date.now() - animation.timestamp,
+    [animation.timestamp]
+  );
 
   useEffect(() => {
     const remaining = DURATION_MS - elapsed;
@@ -47,18 +51,18 @@ export const FloatingNumber: React.FC<FloatingNumberProps> = ({ animation }) => 
     }
     return abs.toLocaleString();
   };
-  
+
   const renderIcon = () => {
     switch (animation.type) {
-      case 'coins': 
+      case 'coins':
         return <Coins className="w-3 h-3" />;
-      case 'gems': 
+      case 'gems':
         return <span className="text-xs">💎</span>;
-      default: 
+      default:
         return <Coins className="w-3 h-3" />;
     }
   };
-  
+
   return (
     <div
       className={`floating-number ${animation.type} ${isPositive ? 'positive' : 'negative'}`}
@@ -68,13 +72,14 @@ export const FloatingNumber: React.FC<FloatingNumberProps> = ({ animation }) => 
         gridColumnStart: animation.col + 1,
         transform: `translate(${animation.jitterX}px, ${animation.jitterY}px)`,
         // Décale le début de l'animation pour reprendre là où elle en était
-        animationDelay: `${-Math.min(elapsed, DURATION_MS)}ms`
+        animationDelay: `${-Math.min(elapsed, DURATION_MS)}ms`,
       }}
     >
       <div className="flex items-center space-x-1 font-semibold text-sm">
         {renderIcon()}
         <span className="mobile-text-sm">
-          {isPositive ? '+' : ''}{formatAmount(animation.amount)}
+          {isPositive ? '+' : ''}
+          {formatAmount(animation.amount)}
         </span>
       </div>
     </div>

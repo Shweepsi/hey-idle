@@ -1,5 +1,4 @@
 export class AdValidationService {
-  
   /**
    * Valide qu'AdMob a confirmé la récompense
    * Plus besoin de validation de durée - AdMob s'en charge

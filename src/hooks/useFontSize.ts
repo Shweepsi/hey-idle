@@ -12,11 +12,16 @@ export function useFontSize() {
 
   useEffect(() => {
     const root = document.documentElement;
-    
+
     // Appliquer la classe de taille de police au root
-    root.classList.remove('font-size-small', 'font-size-medium', 'font-size-large', 'font-size-extra-large');
+    root.classList.remove(
+      'font-size-small',
+      'font-size-medium',
+      'font-size-large',
+      'font-size-extra-large'
+    );
     root.classList.add(`font-size-${fontSize}`);
-    
+
     // Sauvegarder dans localStorage
     localStorage.setItem(FONT_SIZE_KEY, fontSize);
   }, [fontSize]);
@@ -48,6 +53,6 @@ export function useFontSize() {
     decreaseFontSize,
     resetFontSize,
     canIncrease: fontSize !== 'extra-large',
-    canDecrease: fontSize !== 'small'
+    canDecrease: fontSize !== 'small',
   };
 }

@@ -16,9 +16,9 @@ class PlantTypesCacheService {
    */
   async getPlantTypes(): Promise<PlantType[]> {
     const now = Date.now();
-    
+
     // Si on a des données en cache et qu'elles sont encore valides
-    if (this.cache && (now - this.lastFetchTime) < this.CACHE_DURATION) {
+    if (this.cache && now - this.lastFetchTime < this.CACHE_DURATION) {
       return this.cache;
     }
 
@@ -29,7 +29,7 @@ class PlantTypesCacheService {
 
     // Sinon on lance une nouvelle requête
     this.fetchPromise = this.fetchFromDatabase();
-    
+
     try {
       const result = await this.fetchPromise;
       return result;
@@ -48,7 +48,10 @@ class PlantTypesCacheService {
       .order('level_required', { ascending: true });
 
     if (error) {
-      console.error('Erreur lors de la récupération des types de plantes:', error);
+      console.error(
+        'Erreur lors de la récupération des types de plantes:',
+        error
+      );
       throw error;
     }
 
@@ -59,8 +62,10 @@ class PlantTypesCacheService {
     // Mettre à jour le cache
     this.cache = plantTypes;
     this.lastFetchTime = Date.now();
-    
-    console.log(`✅ Types de plantes mis en cache (${plantTypes.length} types)`);
+
+    console.log(
+      `✅ Types de plantes mis en cache (${plantTypes.length} types)`
+    );
     return plantTypes;
   }
 
@@ -69,7 +74,7 @@ class PlantTypesCacheService {
    */
   async getPlantTypeById(id: string): Promise<PlantType | undefined> {
     const plantTypes = await this.getPlantTypes();
-    return plantTypes.find(pt => pt.id === id);
+    return plantTypes.find((pt) => pt.id === id);
   }
 
   /**
@@ -77,7 +82,7 @@ class PlantTypesCacheService {
    */
   async getPlantTypesByLevel(level: number): Promise<PlantType[]> {
     const plantTypes = await this.getPlantTypes();
-    return plantTypes.filter(pt => pt.level_required <= level);
+    return plantTypes.filter((pt) => pt.level_required <= level);
   }
 
   /**
@@ -110,7 +115,7 @@ class PlantTypesCacheService {
     return {
       isCached: this.cache !== null,
       age: this.cache ? now - this.lastFetchTime : 0,
-      count: this.cache ? this.cache.length : 0
+      count: this.cache ? this.cache.length : 0,
     };
   }
 }

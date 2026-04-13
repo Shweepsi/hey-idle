@@ -1,4 +1,3 @@
-
 export interface LevelUpgrade {
   id: string;
   name: string;

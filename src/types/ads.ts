@@ -1,5 +1,13 @@
 export interface AdReward {
-  type: 'coins' | 'gems' | 'coin_boost' | 'gem_boost' | 'growth_speed' | 'growth_boost' | 'exp_boost' | 'harvest_boost';
+  type:
+    | 'coins'
+    | 'gems'
+    | 'coin_boost'
+    | 'gem_boost'
+    | 'growth_speed'
+    | 'growth_boost'
+    | 'exp_boost'
+    | 'harvest_boost';
   amount: number;
   duration?: number; // Pour les boosts temporaires en minutes
   multiplier?: number;

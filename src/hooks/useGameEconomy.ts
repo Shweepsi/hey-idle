@@ -1,4 +1,3 @@
-
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
@@ -16,12 +15,16 @@ export const useGameEconomy = () => {
 
       const { data, error } = await supabase.rpc('unlock_plot_atomic', {
         p_user_id: user.id,
-        p_plot_number: plotNumber
+        p_plot_number: plotNumber,
       });
 
       if (error) throw new Error(error.message);
 
-      const result = data as { success: boolean; error?: string; cost?: number };
+      const result = data as {
+        success: boolean;
+        error?: string;
+        cost?: number;
+      };
       if (!result?.success) {
         throw new Error(result?.error || 'Erreur lors du déblocage');
       }
@@ -35,11 +38,11 @@ export const useGameEconomy = () => {
     },
     onError: (error: any) => {
       toast.error(error.message || 'Erreur lors du déblocage');
-    }
+    },
   });
 
   return {
     unlockPlot: (plotNumber: number) => unlockPlotMutation.mutate(plotNumber),
-    isUnlocking: unlockPlotMutation.isPending
+    isUnlocking: unlockPlotMutation.isPending,
   };
 };

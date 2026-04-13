@@ -1,5 +1,11 @@
 import React from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { useAchievements } from '@/hooks/useAchievements';
@@ -15,7 +21,7 @@ export const AchievementTracker = () => {
     return (
       <Card>
         <CardHeader>
-        <CardTitle className="flex items-center gap-2">
+          <CardTitle className="flex items-center gap-2">
             <Trophy className="h-5 w-5" />
             Succès
           </CardTitle>
@@ -27,9 +33,10 @@ export const AchievementTracker = () => {
     );
   }
 
-  const completedCount = achievements.filter(a => a.completed).length;
+  const completedCount = achievements.filter((a) => a.completed).length;
   const totalCount = achievements.length;
-  const completionPercentage = totalCount > 0 ? (completedCount / totalCount) * 100 : 0;
+  const completionPercentage =
+    totalCount > 0 ? (completedCount / totalCount) * 100 : 0;
 
   return (
     <Card>
@@ -39,7 +46,8 @@ export const AchievementTracker = () => {
           Succès
         </CardTitle>
         <CardDescription>
-          {completedCount}/{totalCount} complétés ({Math.round(completionPercentage)}%)
+          {completedCount}/{totalCount} complétés (
+          {Math.round(completionPercentage)}%)
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -52,8 +60,8 @@ export const AchievementTracker = () => {
 
         <div className="space-y-3">
           {achievements.map((achievement) => (
-            <div 
-              key={achievement.id} 
+            <div
+              key={achievement.id}
               className={`border rounded-lg p-3 ${achievement.completed ? 'bg-muted/50' : ''}`}
             >
               <div className="flex items-center justify-between">
@@ -61,12 +69,17 @@ export const AchievementTracker = () => {
                   <span className="text-lg">{achievement.emoji}</span>
                   <div>
                     <h4 className="font-medium">{achievement.name}</h4>
-                    <p className="text-sm text-muted-foreground">{achievement.description}</p>
+                    <p className="text-sm text-muted-foreground">
+                      {achievement.description}
+                    </p>
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
                   {achievement.completed ? (
-                    <Badge variant="default" className="bg-green-100 text-green-800">
+                    <Badge
+                      variant="default"
+                      className="bg-green-100 text-green-800"
+                    >
                       <Award className="h-3 w-3 mr-1" />
                       Complété
                     </Badge>
@@ -77,16 +90,21 @@ export const AchievementTracker = () => {
                   )}
                 </div>
               </div>
-              
+
               {!achievement.completed && (
                 <div className="mt-2 space-y-1">
-                  <Progress 
-                    value={((achievement.progress || 0) / achievement.target) * 100} 
+                  <Progress
+                    value={
+                      ((achievement.progress || 0) / achievement.target) * 100
+                    }
                     className="h-1"
                   />
                   <div className="flex justify-between text-xs text-muted-foreground">
                     <span>Récompense:</span>
-                    <span>{achievement.reward_coins} 🪙 + {achievement.reward_gems} 💎</span>
+                    <span>
+                      {achievement.reward_coins} 🪙 + {achievement.reward_gems}{' '}
+                      💎
+                    </span>
                   </div>
                 </div>
               )}
@@ -96,7 +114,7 @@ export const AchievementTracker = () => {
 
         {achievements.length === 0 && (
           <div className="text-center py-8 text-muted-foreground">
-          <Star className="h-12 w-12 mx-auto mb-2 opacity-50" />
+            <Star className="h-12 w-12 mx-auto mb-2 opacity-50" />
             <p>Aucun succès disponible</p>
           </div>
         )}

@@ -1,14 +1,17 @@
-import { supabase } from "@/integrations/supabase/client";
-import { AdReward } from "@/types/ads";
-import { AdValidationService } from "./AdValidationService";
-import { AdCooldownService } from "./AdCooldownService";
-import { AdVerificationService } from "./AdVerificationService";
+import { supabase } from '@/integrations/supabase/client';
+import { AdReward } from '@/types/ads';
+import { AdValidationService } from './AdValidationService';
+import { AdCooldownService } from './AdCooldownService';
+import { AdVerificationService } from './AdVerificationService';
 
 export class AdSessionService {
-  static async createSession(userId: string, reward: AdReward): Promise<{ success: boolean; sessionId?: string; error?: string }> {
+  static async createSession(
+    userId: string,
+    reward: AdReward
+  ): Promise<{ success: boolean; sessionId?: string; error?: string }> {
     try {
       const cooldownInfo = await AdCooldownService.getCooldownInfo(userId);
-      
+
       if (!cooldownInfo.available) {
         return { success: false, error: 'Publicité non disponible' };
       }
@@ -25,9 +28,9 @@ export class AdSessionService {
           started_at: now.toISOString(),
           completed: false,
           ad_duration: null,
-          estimated_duration: null
+          estimated_duration: null,
         },
-        watched_at: now.toISOString()
+        watched_at: now.toISOString(),
       };
 
       const { data: session, error: sessionError } = await supabase
@@ -41,19 +44,25 @@ export class AdSessionService {
       return { success: true, sessionId: session.id };
     } catch (error) {
       console.error('Error starting ad session:', error);
-      return { success: false, error: 'Erreur lors du démarrage de la publicité' };
+      return {
+        success: false,
+        error: 'Erreur lors du démarrage de la publicité',
+      };
     }
   }
 
   static async completeSession(
-    userId: string, 
-    sessionId: string, 
+    userId: string,
+    sessionId: string,
     rewarded: boolean
   ): Promise<{ success: boolean; error?: string }> {
     try {
       // Verify session exists and belongs to user with enhanced security
-      const verification = await AdVerificationService.verifySession(userId, sessionId);
-      
+      const verification = await AdVerificationService.verifySession(
+        userId,
+        sessionId
+      );
+
       if (!verification.isValid) {
         return { success: false, error: verification.error };
       }
@@ -63,10 +72,10 @@ export class AdSessionService {
       // 2. Valider que AdMob a confirmé la récompense
       const isValidReward = AdValidationService.validateAdReward(rewarded);
       if (!isValidReward) {
-        console.log('❌ AdMob n\'a pas confirmé la récompense');
-        return { 
-          success: false, 
-          error: 'Publicité non complétée selon AdMob' 
+        console.log("❌ AdMob n'a pas confirmé la récompense");
+        return {
+          success: false,
+          error: 'Publicité non complétée selon AdMob',
         };
       }
 
@@ -81,8 +90,8 @@ export class AdSessionService {
             ...rewardData,
             completed: true,
             completed_at: now.toISOString(),
-            rewarded_by_admob: rewarded
-          }
+            rewarded_by_admob: rewarded,
+          },
         })
         .eq('id', sessionId);
 
@@ -98,17 +107,22 @@ export class AdSessionService {
         duration: sessionRewardData.duration,
         multiplier: sessionRewardData.multiplier,
         description: sessionRewardData.description,
-        emoji: ''
+        emoji: '',
       };
 
       // SUPPRIMÉ: La distribution des récompenses est maintenant gérée entièrement par l'edge function ad-rewards
       // Plus besoin de AdRewardDistributionService qui causait une double application des boosts
-      console.log(`AdMob: Reward distribution handled by edge function ad-rewards for user ${userId}`);
+      console.log(
+        `AdMob: Reward distribution handled by edge function ad-rewards for user ${userId}`
+      );
 
       return { success: true };
     } catch (error) {
       console.error('Error completing ad session:', error);
-      return { success: false, error: 'Erreur lors de la finalisation de la publicité' };
+      return {
+        success: false,
+        error: 'Erreur lors de la finalisation de la publicité',
+      };
     }
   }
 

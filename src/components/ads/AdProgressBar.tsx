@@ -22,7 +22,7 @@ export function AdProgressBar({ dailyCount, maxDaily }: AdProgressBarProps) {
             </span>
           </div>
           <div className="w-full bg-orange-100 rounded-full h-2.5 overflow-hidden shadow-inner">
-            <div 
+            <div
               className="h-full bg-gradient-to-r from-orange-400 via-orange-500 to-amber-500 transition-all duration-500 ease-out relative"
               style={{ width: `${progressPercentage}%` }}
             >

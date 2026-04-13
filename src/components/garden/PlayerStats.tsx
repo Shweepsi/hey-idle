@@ -12,7 +12,7 @@ interface PlayerStatsProps {
 export const PlayerStats = ({
   garden,
   totalPlants,
-  activePlants
+  activePlants,
 }: PlayerStatsProps) => {
   const { isPremium } = usePremiumStatus();
   if (!garden) return null;
@@ -27,15 +27,16 @@ export const PlayerStats = ({
   const xpForNextLevel = getXpForLevel(currentLevel);
   const xpProgress = currentXp - xpForCurrentLevel;
   const xpNeeded = xpForNextLevel - xpForCurrentLevel;
-  const progressPercentage = Math.min(xpProgress / xpNeeded * 100, 100);
+  const progressPercentage = Math.min((xpProgress / xpNeeded) * 100, 100);
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('fr-FR', {
       day: 'numeric',
       month: 'long',
-      year: 'numeric'
+      year: 'numeric',
     });
   };
-  return <div className="space-y-6">
+  return (
+    <div className="space-y-6">
       {/* Niveau et Expérience avec Badge Premium */}
       <Card>
         <CardHeader className="pb-2">
@@ -76,7 +77,9 @@ export const PlayerStats = ({
         <Card>
           <CardContent className="p-4 text-center">
             <Trophy className="h-6 w-6 text-yellow-500 mx-auto mb-2" />
-            <p className="text-2xl font-bold text-yellow-600">{garden.total_harvests}</p>
+            <p className="text-2xl font-bold text-yellow-600">
+              {garden.total_harvests}
+            </p>
             <p className="text-xs text-gray-600">Récoltes totales</p>
           </CardContent>
         </Card>
@@ -88,13 +91,9 @@ export const PlayerStats = ({
             <p className="text-xs text-gray-600">Pièces</p>
           </CardContent>
         </Card>
-
-        
-
-        
       </div>
 
       {/* Informations du compte */}
-      
-    </div>;
+    </div>
+  );
 };

@@ -26,7 +26,11 @@ export const AboutPage = () => {
 
           <section className="mb-6">
             <h2 className="text-lg font-semibold mb-3">Le Jeu</h2>
-            <p>Idle Grow est un jeu de simulation de jardinage relaxant où vous cultivez des plantes virtuelles, collectez des pièces et progressez à votre rythme.</p>
+            <p>
+              Idle Grow est un jeu de simulation de jardinage relaxant où vous
+              cultivez des plantes virtuelles, collectez des pièces et
+              progressez à votre rythme.
+            </p>
           </section>
 
           <section className="mb-6">
@@ -42,7 +46,10 @@ export const AboutPage = () => {
 
           <section className="mb-6">
             <h2 className="text-lg font-semibold mb-3">Développeur</h2>
-            <p>Développé avec passion pour offrir une expérience de jeu relaxante et addictive.</p>
+            <p>
+              Développé avec passion pour offrir une expérience de jeu relaxante
+              et addictive.
+            </p>
           </section>
 
           <section className="mb-6">
@@ -57,12 +64,18 @@ export const AboutPage = () => {
 
           <section className="mb-6">
             <h2 className="text-lg font-semibold mb-3">Support</h2>
-            <p>Pour obtenir de l'aide ou signaler un problème : contact@idlegrow.com</p>
+            <p>
+              Pour obtenir de l'aide ou signaler un problème :
+              contact@idlegrow.com
+            </p>
           </section>
 
           <section className="mb-6">
             <h2 className="text-lg font-semibold mb-3">Remerciements</h2>
-            <p>Merci à tous les joueurs qui font vivre cette communauté de jardiniers virtuels !</p>
+            <p>
+              Merci à tous les joueurs qui font vivre cette communauté de
+              jardiniers virtuels !
+            </p>
           </section>
         </div>
       </div>

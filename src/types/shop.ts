@@ -1,4 +1,3 @@
-
 export interface ShopItem {
   id: string;
   name: string;

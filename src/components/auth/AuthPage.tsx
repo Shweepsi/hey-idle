@@ -1,6 +1,11 @@
-
 import { useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -35,14 +40,16 @@ export const AuthPage = () => {
         <CardHeader className="text-center">
           <div className="flex justify-center mb-4">
             <div className="relative">
-              <img 
-                src="/ic_launcher.png" 
-                alt="Idle Grow Logo" 
+              <img
+                src="/ic_launcher.png"
+                alt="Idle Grow Logo"
                 className="h-16 w-16 object-contain"
               />
             </div>
           </div>
-          <CardTitle className="text-2xl font-bold text-green-800">Idle Grow</CardTitle>
+          <CardTitle className="text-2xl font-bold text-green-800">
+            Idle Grow
+          </CardTitle>
           <CardDescription>
             Créez votre jardin virtuel et cultivez de magnifiques plantes
           </CardDescription>
@@ -53,7 +60,7 @@ export const AuthPage = () => {
               <TabsTrigger value="signin">Connexion</TabsTrigger>
               <TabsTrigger value="signup">Inscription</TabsTrigger>
             </TabsList>
-            
+
             <TabsContent value="signin">
               <form onSubmit={handleSignIn} className="space-y-4">
                 <div className="space-y-2">
@@ -76,8 +83,8 @@ export const AuthPage = () => {
                     required
                   />
                 </div>
-                <Button 
-                  type="submit" 
+                <Button
+                  type="submit"
                   className="w-full bg-green-600 hover:bg-green-700"
                   disabled={loading}
                 >
@@ -86,7 +93,7 @@ export const AuthPage = () => {
                 </Button>
               </form>
             </TabsContent>
-            
+
             <TabsContent value="signup">
               <form onSubmit={handleSignUp} className="space-y-4">
                 <div className="space-y-2">
@@ -121,8 +128,8 @@ export const AuthPage = () => {
                     minLength={6}
                   />
                 </div>
-                <Button 
-                  type="submit" 
+                <Button
+                  type="submit"
                   className="w-full bg-green-600 hover:bg-green-700"
                   disabled={loading}
                 >

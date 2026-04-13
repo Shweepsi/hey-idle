@@ -2,7 +2,7 @@ import { useGameData } from '@/hooks/useGameData';
 
 export const usePrestigeAvailability = () => {
   const { data: gameData } = useGameData();
-  
+
   if (!gameData?.garden) {
     return { isPrestigeAvailable: false };
   }
@@ -13,10 +13,11 @@ export const usePrestigeAvailability = () => {
   const prestigeCostsGems = [10, 25, 50];
   const costCoins = prestigeCostsCoins[prestigeLevel] || Infinity;
   const costGems = prestigeCostsGems[prestigeLevel] || Infinity;
-  
-  const isPrestigeAvailable = garden.coins >= costCoins && 
-                              (garden.gems || 0) >= costGems && 
-                              prestigeLevel < 3;
+
+  const isPrestigeAvailable =
+    garden.coins >= costCoins &&
+    (garden.gems || 0) >= costGems &&
+    prestigeLevel < 3;
 
   return { isPrestigeAvailable };
 };

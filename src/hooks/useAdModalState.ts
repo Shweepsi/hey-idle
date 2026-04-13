@@ -16,10 +16,13 @@ type AdModalAction =
 const initialState: AdModalState = {
   selectedReward: null,
   availableRewards: [],
-  loadingRewards: false
+  loadingRewards: false,
 };
 
-function adModalReducer(state: AdModalState, action: AdModalAction): AdModalState {
+function adModalReducer(
+  state: AdModalState,
+  action: AdModalAction
+): AdModalState {
   switch (action.type) {
     case 'SET_SELECTED_REWARD':
       // Prevent unnecessary re-renders if the reward is the same
@@ -27,9 +30,13 @@ function adModalReducer(state: AdModalState, action: AdModalAction): AdModalStat
       return { ...state, selectedReward: action.payload };
     case 'SET_AVAILABLE_REWARDS':
       // Prevent unnecessary re-renders if the rewards array is the same
-      if (state.availableRewards === action.payload || 
-          (state.availableRewards.length === action.payload.length && 
-           state.availableRewards.every((reward, index) => reward === action.payload[index]))) {
+      if (
+        state.availableRewards === action.payload ||
+        (state.availableRewards.length === action.payload.length &&
+          state.availableRewards.every(
+            (reward, index) => reward === action.payload[index]
+          ))
+      ) {
         return state;
       }
       return { ...state, availableRewards: action.payload };
@@ -47,23 +54,26 @@ export function useAdModalState() {
   const [state, dispatch] = useReducer(adModalReducer, initialState);
 
   // Memoize callbacks to prevent unnecessary re-renders
-  const actions = useMemo(() => ({
-    setSelectedReward: (reward: AdReward | null) => {
-      dispatch({ type: 'SET_SELECTED_REWARD', payload: reward });
-    },
-    setAvailableRewards: (rewards: AdReward[]) => {
-      dispatch({ type: 'SET_AVAILABLE_REWARDS', payload: rewards });
-    },
-    setLoadingRewards: (loading: boolean) => {
-      dispatch({ type: 'SET_LOADING_REWARDS', payload: loading });
-    },
-    reset: () => {
-      dispatch({ type: 'RESET' });
-    }
-  }), []);
+  const actions = useMemo(
+    () => ({
+      setSelectedReward: (reward: AdReward | null) => {
+        dispatch({ type: 'SET_SELECTED_REWARD', payload: reward });
+      },
+      setAvailableRewards: (rewards: AdReward[]) => {
+        dispatch({ type: 'SET_AVAILABLE_REWARDS', payload: rewards });
+      },
+      setLoadingRewards: (loading: boolean) => {
+        dispatch({ type: 'SET_LOADING_REWARDS', payload: loading });
+      },
+      reset: () => {
+        dispatch({ type: 'RESET' });
+      },
+    }),
+    []
+  );
 
   return {
     ...state,
-    ...actions
+    ...actions,
   };
 }

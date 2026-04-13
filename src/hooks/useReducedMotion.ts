@@ -17,7 +17,7 @@ export const useReducedMotion = () => {
 
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY, String(reducedMotion));
-    
+
     // Apply to document root for CSS-based animations
     if (reducedMotion) {
       document.documentElement.classList.add('reduce-motion');
@@ -31,7 +31,7 @@ export const useReducedMotion = () => {
   }, []);
 
   const toggleReducedMotion = useCallback(() => {
-    setReducedMotionState(prev => !prev);
+    setReducedMotionState((prev) => !prev);
   }, []);
 
   return { reducedMotion, setReducedMotion, toggleReducedMotion };

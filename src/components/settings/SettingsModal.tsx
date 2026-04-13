@@ -3,12 +3,12 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
-import { Separator } from "@/components/ui/separator";
-import { AnimationSettings } from "@/components/settings/AnimationSettings";
-import { FontSizeSelector } from "@/components/accessibility/FontSizeSelector";
-import { SoundSettings } from "@/components/settings/SoundSettings";
-import { APP_VERSION } from "@/version";
+} from '@/components/ui/dialog';
+import { Separator } from '@/components/ui/separator';
+import { AnimationSettings } from '@/components/settings/AnimationSettings';
+import { FontSizeSelector } from '@/components/accessibility/FontSizeSelector';
+import { SoundSettings } from '@/components/settings/SoundSettings';
+import { APP_VERSION } from '@/version';
 
 interface SettingsModalProps {
   isOpen: boolean;

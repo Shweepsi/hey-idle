@@ -1,5 +1,4 @@
-
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from '@/integrations/supabase/client';
 
 export class AdCooldownService {
   private static readonly MAX_DAILY_ADS = 5; // Limite quotidienne
@@ -13,12 +12,12 @@ export class AdCooldownService {
   }> {
     try {
       console.log('🔍 Checking ad cooldown for user:', userId);
-      
+
       // Utiliser la fonction ad-rewards existante avec GET
       const { data, error } = await supabase.functions.invoke('ad-rewards', {
-        body: null // GET request
+        body: null, // GET request
       });
-      
+
       if (error) {
         console.error('❌ Error checking ad limit:', error);
         throw error;
@@ -36,14 +35,16 @@ export class AdCooldownService {
         const tomorrow = new Date(now);
         tomorrow.setDate(tomorrow.getDate() + 1);
         tomorrow.setHours(0, 0, 0, 0);
-        const timeUntilNext = Math.ceil((tomorrow.getTime() - now.getTime()) / 1000);
+        const timeUntilNext = Math.ceil(
+          (tomorrow.getTime() - now.getTime()) / 1000
+        );
 
         return {
           available: false,
           cooldownEnds: tomorrow,
           timeUntilNext,
           dailyCount,
-          maxDaily
+          maxDaily,
         };
       }
 
@@ -52,7 +53,7 @@ export class AdCooldownService {
         cooldownEnds: null,
         timeUntilNext: 0,
         dailyCount,
-        maxDaily
+        maxDaily,
       };
     } catch (error) {
       console.error('💥 Error in getCooldownInfo:', error);
@@ -62,7 +63,7 @@ export class AdCooldownService {
         cooldownEnds: null,
         timeUntilNext: 0,
         dailyCount: 0,
-        maxDaily: this.MAX_DAILY_ADS
+        maxDaily: this.MAX_DAILY_ADS,
       };
     }
   }
@@ -70,11 +71,10 @@ export class AdCooldownService {
   static async updateAfterAdWatch(userId: string): Promise<void> {
     try {
       console.log('📈 Updating ad count after watch for user:', userId);
-      
-      // Cette fonction n'est plus nécessaire car l'incrémentation 
+
+      // Cette fonction n'est plus nécessaire car l'incrémentation
       // se fait directement dans la fonction ad-rewards lors du claim
       console.log('✅ Ad count will be updated by the claim process');
-      
     } catch (error) {
       console.error('💥 Error in updateAfterAdWatch:', error);
       throw error;
@@ -84,7 +84,7 @@ export class AdCooldownService {
   static async updateCooldown(userId: string): Promise<void> {
     return this.updateAfterAdWatch(userId);
   }
-  
+
   static get maxDailyAds() {
     return this.MAX_DAILY_ADS;
   }

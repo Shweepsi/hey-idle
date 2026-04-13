@@ -32,15 +32,19 @@ export const usePlantActions = () => {
       if (cachedData) {
         plot = cachedData.plots?.find((p: any) => p.plot_number === plotNumber);
         garden = cachedData.garden;
-        plantType = cachedData.plantTypes?.find((pt: any) => pt.id === plot?.plant_type);
-        
-        console.log('📋 Utilisation des données en cache pour la validation rapide');
+        plantType = cachedData.plantTypes?.find(
+          (pt: any) => pt.id === plot?.plant_type
+        );
+
+        console.log(
+          '📋 Utilisation des données en cache pour la validation rapide'
+        );
       }
 
       // Fallback sur les requêtes réseau si les données ne sont pas en cache
       if (!plot || !garden || !plantType) {
         console.log('🌐 Données manquantes en cache, requête réseau...');
-        
+
         // Obtenir les infos en parallèle pour plus de rapidité
         const [plotResult, gardenResult] = await Promise.all([
           supabase
@@ -53,28 +57,32 @@ export const usePlantActions = () => {
             .from('player_gardens')
             .select('*')
             .eq('user_id', user.id)
-            .single()
+            .single(),
         ]);
 
         if (plotResult.error) {
           console.error('❌ Erreur parcelle:', plotResult.error);
-          throw new Error(`Erreur lors de la récupération de la parcelle: ${plotResult.error.message}`);
+          throw new Error(
+            `Erreur lors de la récupération de la parcelle: ${plotResult.error.message}`
+          );
         }
 
         if (gardenResult.error) {
           console.error('❌ Erreur jardin:', gardenResult.error);
-          throw new Error(`Erreur lors de la récupération du jardin: ${gardenResult.error.message}`);
+          throw new Error(
+            `Erreur lors de la récupération du jardin: ${gardenResult.error.message}`
+          );
         }
 
         plot = plotResult.data;
         garden = gardenResult.data;
         plantType = plot?.plant_types;
       }
-      
+
       if (!plot) {
         throw new Error('Parcelle non trouvée');
       }
-      
+
       if (!plot.plant_type) {
         throw new Error('Aucune plante à récolter sur cette parcelle');
       }
@@ -87,41 +95,53 @@ export const usePlantActions = () => {
 
       // UNIFIED VERIFICATION: Use the same logic as backend
       console.log('💪 Multiplicateurs unifiés:', calculations.multipliers);
-      
+
       const harvestCheck = calculations.canHarvestPlant(plot);
-      
+
       if (!harvestCheck.canHarvest) {
         if (harvestCheck.timeRemaining) {
-          const timeString = harvestCheck.timeRemaining > 60 
-            ? `${Math.floor(harvestCheck.timeRemaining / 60)}m ${harvestCheck.timeRemaining % 60}s`
-            : `${harvestCheck.timeRemaining}s`;
-          console.log(`⏰ Plante pas encore prête (unified check), temps restant: ${timeString}`);
-          throw new Error(`La plante n'est pas encore prête (${timeString} restantes)`);
+          const timeString =
+            harvestCheck.timeRemaining > 60
+              ? `${Math.floor(harvestCheck.timeRemaining / 60)}m ${harvestCheck.timeRemaining % 60}s`
+              : `${harvestCheck.timeRemaining}s`;
+          console.log(
+            `⏰ Plante pas encore prête (unified check), temps restant: ${timeString}`
+          );
+          throw new Error(
+            `La plante n'est pas encore prête (${timeString} restantes)`
+          );
         }
-        throw new Error(harvestCheck.reason || 'Impossible de récolter cette plante');
+        throw new Error(
+          harvestCheck.reason || 'Impossible de récolter cette plante'
+        );
       }
 
       console.log('✅ Plante prête pour la récolte (pre-check client-side)');
 
       // Server computes all rewards from DB state. Client passes only identifiers.
-      const { data: transactionResult, error: transactionError } = await supabase.rpc('harvest_plant_transaction', {
-        p_user_id: user.id,
-        p_plot_number: plotNumber
-      });
+      const { data: transactionResult, error: transactionError } =
+        await supabase.rpc('harvest_plant_transaction', {
+          p_user_id: user.id,
+          p_plot_number: plotNumber,
+        });
 
       if (transactionError) {
         console.error('❌ Erreur transaction atomique:', transactionError);
-        throw new Error(`Erreur lors de la transaction: ${transactionError.message}`);
+        throw new Error(
+          `Erreur lors de la transaction: ${transactionError.message}`
+        );
       }
 
       const result = transactionResult as any;
       if (!result?.success) {
         console.error('❌ Transaction échouée:', result?.error);
-        throw new Error(`Transaction échouée: ${result?.error || 'Erreur inconnue'}`);
+        throw new Error(
+          `Transaction échouée: ${result?.error || 'Erreur inconnue'}`
+        );
       }
 
       console.log('✅ Transaction atomique réussie avec synchronisation');
-      
+
       // Extract results for consistent level checking
       const finalLevel = result.final_level;
 
@@ -145,7 +165,7 @@ export const usePlantActions = () => {
       }
 
       console.log('✅ Récolte terminée avec succès');
-      
+
       // Retourner les données exactes du backend pour synchronisation parfaite
       return {
         plotNumber,
@@ -157,7 +177,7 @@ export const usePlantActions = () => {
         harvestReward: result.harvest_reward,
         expReward: result.exp_reward,
         gemReward: result.gem_reward,
-        plantType
+        plantType,
       };
     },
     onMutate: async (plotNumber: number) => {
@@ -174,7 +194,9 @@ export const usePlantActions = () => {
         const plot = old.plots?.find((p: any) => p.plot_number === plotNumber);
         if (!plot || !plot.plant_type) return old;
 
-        const plantType = old.plantTypes?.find((pt: any) => pt.id === plot.plant_type);
+        const plantType = old.plantTypes?.find(
+          (pt: any) => pt.id === plot.plant_type
+        );
         if (!plantType) return old;
 
         // UNIFIED OPTIMISTIC CALCULATIONS: Use the same service
@@ -184,7 +206,10 @@ export const usePlantActions = () => {
           old.garden?.level || 1,
           old.garden?.permanent_multiplier || 1
         );
-        const expReward = calculations.calculateExpReward(plantType.level_required, plantType.rarity);
+        const expReward = calculations.calculateExpReward(
+          plantType.level_required,
+          plantType.rarity
+        );
         const gemReward = 0; // Conservative: no gems in optimistic update
 
         return {
@@ -196,16 +221,23 @@ export const usePlantActions = () => {
             experience: (old.garden?.experience || 0) + expReward,
             total_harvests: (old.garden?.total_harvests || 0) + 1,
           },
-          plots: old.plots.map((p: any) => 
-            p.plot_number === plotNumber 
-              ? { ...p, plant_type: null, planted_at: null, growth_time_seconds: null }
+          plots: old.plots.map((p: any) =>
+            p.plot_number === plotNumber
+              ? {
+                  ...p,
+                  plant_type: null,
+                  planted_at: null,
+                  growth_time_seconds: null,
+                }
               : p
-          )
+          ),
         };
       });
 
       // Immediate visual feedback
-      const plotElement = document.querySelector(`[data-plot="${plotNumber}"]`) as HTMLElement;
+      const plotElement = document.querySelector(
+        `[data-plot="${plotNumber}"]`
+      ) as HTMLElement;
       if (plotElement) {
         plotElement.style.transform = 'scale(1.05)';
         plotElement.style.transition = 'transform 0.15s ease-out';
@@ -217,35 +249,38 @@ export const usePlantActions = () => {
           }, 150);
         }, 150);
       }
-      
+
       return { previousData };
     },
     onSuccess: (data) => {
       // Selective invalidation - mark as stale but don't refetch immediately
       // The optimistic update should be mostly accurate
       setTimeout(() => {
-        queryClient.invalidateQueries({ 
+        queryClient.invalidateQueries({
           queryKey: ['gameData', user?.id],
-          refetchType: 'none' // Just mark as stale, don't refetch
+          refetchType: 'none', // Just mark as stale, don't refetch
         });
       }, 100);
 
       // Success feedback
-      console.log(`🌱 ${data.plantType?.display_name || 'Plante'} récoltée! +${data.harvestReward} pièces, +${data.expReward} XP${data.gemReward > 0 ? `, +${data.gemReward} gemmes` : ''}`);
+      console.log(
+        `🌱 ${data.plantType?.display_name || 'Plante'} récoltée! +${data.harvestReward} pièces, +${data.expReward} XP${data.gemReward > 0 ? `, +${data.gemReward} gemmes` : ''}`
+      );
     },
     onError: (error: any, variables, context) => {
       // Rollback en cas d'erreur
       if (context?.previousData) {
         queryClient.setQueryData(['gameData', user?.id], context.previousData);
       }
-      
+
       console.error('💥 Erreur lors de la récolte:', error);
       toast.error(error.message || 'Erreur lors de la récolte');
-    }
+    },
   });
 
   return {
-    harvestPlant: (plotNumber: number) => harvestPlantMutation.mutate(plotNumber),
-    isHarvesting: harvestPlantMutation.isPending
+    harvestPlant: (plotNumber: number) =>
+      harvestPlantMutation.mutate(plotNumber),
+    isHarvesting: harvestPlantMutation.isPending,
   };
 };

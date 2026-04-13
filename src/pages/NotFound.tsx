@@ -1,7 +1,13 @@
-import { useLocation, Link } from "react-router-dom";
-import { useEffect } from "react";
+import { useLocation, Link } from 'react-router-dom';
+import { useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { Home, Sprout, TrendingUp, User, ArrowLeft } from 'lucide-react';
 
 const NotFound = () => {
@@ -9,25 +15,31 @@ const NotFound = () => {
 
   useEffect(() => {
     console.warn(
-      "404: User attempted to access non-existent route:",
+      '404: User attempted to access non-existent route:',
       location.pathname
     );
   }, [location.pathname]);
 
   const getContextualMessage = (pathname: string) => {
-    if (pathname.includes('garden')) return "Cette parcelle n'existe pas dans votre jardin.";
-    if (pathname.includes('upgrade')) return "Cette amélioration semble introuvable.";
-    if (pathname.includes('profile')) return "Ce profil n'a pas pu être trouvé.";
-    if (pathname.includes('store')) return "Cette section du magasin n'existe pas.";
+    if (pathname.includes('garden'))
+      return "Cette parcelle n'existe pas dans votre jardin.";
+    if (pathname.includes('upgrade'))
+      return 'Cette amélioration semble introuvable.';
+    if (pathname.includes('profile'))
+      return "Ce profil n'a pas pu être trouvé.";
+    if (pathname.includes('store'))
+      return "Cette section du magasin n'existe pas.";
     return "Cette page n'existe pas dans votre jardin.";
   };
 
   const getSuggestedAction = (pathname: string) => {
-    if (pathname.includes('garden')) return "Retournez à votre jardin principal";
-    if (pathname.includes('upgrade')) return "Explorez les améliorations disponibles";
-    if (pathname.includes('profile')) return "Consultez votre profil";
-    if (pathname.includes('store')) return "Visitez le magasin";
-    return "Retournez à votre jardin";
+    if (pathname.includes('garden'))
+      return 'Retournez à votre jardin principal';
+    if (pathname.includes('upgrade'))
+      return 'Explorez les améliorations disponibles';
+    if (pathname.includes('profile')) return 'Consultez votre profil';
+    if (pathname.includes('store')) return 'Visitez le magasin';
+    return 'Retournez à votre jardin';
   };
 
   return (
@@ -45,11 +57,12 @@ const NotFound = () => {
               {getContextualMessage(location.pathname)}
             </CardDescription>
             <p className="text-sm text-muted-foreground mt-2">
-              {getSuggestedAction(location.pathname)} ou explorez les autres sections.
+              {getSuggestedAction(location.pathname)} ou explorez les autres
+              sections.
             </p>
           </div>
         </CardHeader>
-        
+
         <CardContent className="space-y-4">
           <div className="grid grid-cols-2 gap-3">
             <Button asChild variant="default" className="w-full">
@@ -58,21 +71,21 @@ const NotFound = () => {
                 Jardin
               </Link>
             </Button>
-            
+
             <Button asChild variant="outline" className="w-full">
               <Link to="/upgrades">
                 <TrendingUp className="w-4 h-4 mr-2" />
                 Améliorations
               </Link>
             </Button>
-            
+
             <Button asChild variant="outline" className="w-full">
               <Link to="/store">
                 <Sprout className="w-4 h-4 mr-2" />
                 Magasin
               </Link>
             </Button>
-            
+
             <Button asChild variant="outline" className="w-full">
               <Link to="/profile">
                 <User className="w-4 h-4 mr-2" />
@@ -80,19 +93,22 @@ const NotFound = () => {
               </Link>
             </Button>
           </div>
-          
-          <Button 
-            onClick={() => window.history.back()} 
-            variant="secondary" 
+
+          <Button
+            onClick={() => window.history.back()}
+            variant="secondary"
             className="w-full mt-4"
           >
             <ArrowLeft className="w-4 h-4 mr-2" />
             Retour
           </Button>
-          
+
           <div className="text-center pt-4 border-t border-border/50">
             <p className="text-xs text-muted-foreground">
-              Route demandée : <code className="bg-muted px-1 py-0.5 rounded text-xs">{location.pathname}</code>
+              Route demandée :{' '}
+              <code className="bg-muted px-1 py-0.5 rounded text-xs">
+                {location.pathname}
+              </code>
             </p>
           </div>
         </CardContent>

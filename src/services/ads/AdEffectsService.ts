@@ -15,13 +15,18 @@ export class AdEffectsService {
   /**
    * Déclenche un effet visuel lors de l'activation d'un boost
    */
-  static triggerBoostActivation(reward: AdReward, targetElement?: HTMLElement): string {
+  static triggerBoostActivation(
+    reward: AdReward,
+    targetElement?: HTMLElement
+  ): string {
     const effectId = `boost_${++this.effectCounter}`;
-    
-    console.log(`[AdEffectsService] ✨ Déclenchement effet boost: ${reward.type}`);
-    
+
+    console.log(
+      `[AdEffectsService] ✨ Déclenchement effet boost: ${reward.type}`
+    );
+
     let effect: VisualEffect;
-    
+
     switch (reward.type) {
       case 'coin_boost':
         effect = this.createCoinRainEffect(effectId, targetElement);
@@ -36,27 +41,30 @@ export class AdEffectsService {
       default:
         effect = this.createGenericBoostEffect(effectId, targetElement);
     }
-    
+
     this.activeEffects.set(effectId, effect);
-    
+
     // Auto-cleanup après la durée de l'effet
     setTimeout(() => {
       this.stopEffect(effectId);
     }, effect.duration);
-    
+
     // Déclenchement du feedback haptique si disponible
     this.triggerHapticFeedback('medium');
-    
+
     return effectId;
   }
 
   /**
    * Effet pluie de pièces
    */
-  private static createCoinRainEffect(id: string, targetElement?: HTMLElement): VisualEffect {
+  private static createCoinRainEffect(
+    id: string,
+    targetElement?: HTMLElement
+  ): VisualEffect {
     const container = targetElement || document.body;
     const duration = 3000;
-    
+
     // Créer le conteneur d'effet
     const effectContainer = document.createElement('div');
     effectContainer.id = `effect-${id}`;
@@ -70,13 +78,13 @@ export class AdEffectsService {
       z-index: 9999;
       overflow: hidden;
     `;
-    
+
     container.appendChild(effectContainer);
-    
+
     // Créer les pièces qui tombent
     const coinCount = 15;
     const coins: HTMLElement[] = [];
-    
+
     for (let i = 0; i < coinCount; i++) {
       const coin = document.createElement('div');
       coin.textContent = '🪙';
@@ -87,14 +95,14 @@ export class AdEffectsService {
         left: ${Math.random() * 100}%;
         animation-delay: ${Math.random() * 2}s;
       `;
-      
+
       effectContainer.appendChild(coin);
       coins.push(coin);
     }
-    
+
     // Ajouter l'animation CSS
     this.addCoinFallAnimation();
-    
+
     return {
       id,
       type: 'coin_rain',
@@ -102,17 +110,20 @@ export class AdEffectsService {
       element: effectContainer,
       cleanup: () => {
         effectContainer.remove();
-      }
+      },
     };
   }
 
   /**
    * Effet étincelles de gemmes
    */
-  private static createGemSparkleEffect(id: string, targetElement?: HTMLElement): VisualEffect {
+  private static createGemSparkleEffect(
+    id: string,
+    targetElement?: HTMLElement
+  ): VisualEffect {
     const container = targetElement || document.body;
     const duration = 2500;
-    
+
     const effectContainer = document.createElement('div');
     effectContainer.id = `effect-${id}`;
     effectContainer.style.cssText = `
@@ -123,12 +134,12 @@ export class AdEffectsService {
       pointer-events: none;
       z-index: 9999;
     `;
-    
+
     container.appendChild(effectContainer);
-    
+
     // Créer les étincelles
     const sparkleCount = 20;
-    
+
     for (let i = 0; i < sparkleCount; i++) {
       const sparkle = document.createElement('div');
       sparkle.textContent = '💎';
@@ -138,20 +149,20 @@ export class AdEffectsService {
         animation: gemSparkle ${duration / 1000}s ease-out forwards;
         animation-delay: ${Math.random() * 1}s;
       `;
-      
+
       const angle = (i / sparkleCount) * Math.PI * 2;
       const distance = 100 + Math.random() * 50;
       const x = Math.cos(angle) * distance;
       const y = Math.sin(angle) * distance;
-      
+
       sparkle.style.setProperty('--end-x', `${x}px`);
       sparkle.style.setProperty('--end-y', `${y}px`);
-      
+
       effectContainer.appendChild(sparkle);
     }
-    
+
     this.addGemSparkleAnimation();
-    
+
     return {
       id,
       type: 'gem_sparkle',
@@ -159,17 +170,20 @@ export class AdEffectsService {
       element: effectContainer,
       cleanup: () => {
         effectContainer.remove();
-      }
+      },
     };
   }
 
   /**
    * Effet pulsation de croissance
    */
-  private static createGrowthPulseEffect(id: string, targetElement?: HTMLElement): VisualEffect {
+  private static createGrowthPulseEffect(
+    id: string,
+    targetElement?: HTMLElement
+  ): VisualEffect {
     const container = targetElement || document.body;
     const duration = 2000;
-    
+
     const effectContainer = document.createElement('div');
     effectContainer.id = `effect-${id}`;
     effectContainer.style.cssText = `
@@ -183,11 +197,11 @@ export class AdEffectsService {
       background: radial-gradient(circle, rgba(34, 197, 94, 0.2) 0%, transparent 70%);
       animation: growthPulse ${duration / 1000}s ease-out forwards;
     `;
-    
+
     container.appendChild(effectContainer);
-    
+
     this.addGrowthPulseAnimation();
-    
+
     return {
       id,
       type: 'growth_pulse',
@@ -195,17 +209,20 @@ export class AdEffectsService {
       element: effectContainer,
       cleanup: () => {
         effectContainer.remove();
-      }
+      },
     };
   }
 
   /**
    * Effet boost générique
    */
-  private static createGenericBoostEffect(id: string, targetElement?: HTMLElement): VisualEffect {
+  private static createGenericBoostEffect(
+    id: string,
+    targetElement?: HTMLElement
+  ): VisualEffect {
     const container = targetElement || document.body;
     const duration = 1500;
-    
+
     const effectContainer = document.createElement('div');
     effectContainer.id = `effect-${id}`;
     effectContainer.style.cssText = `
@@ -219,11 +236,11 @@ export class AdEffectsService {
       animation: boostPop ${duration / 1000}s ease-out forwards;
     `;
     effectContainer.textContent = '⚡';
-    
+
     container.appendChild(effectContainer);
-    
+
     this.addBoostPopAnimation();
-    
+
     return {
       id,
       type: 'boost_activation',
@@ -231,7 +248,7 @@ export class AdEffectsService {
       element: effectContainer,
       cleanup: () => {
         effectContainer.remove();
-      }
+      },
     };
   }
 
@@ -261,14 +278,16 @@ export class AdEffectsService {
   /**
    * Déclenche un feedback haptique
    */
-  private static triggerHapticFeedback(type: 'light' | 'medium' | 'heavy' = 'medium'): void {
+  private static triggerHapticFeedback(
+    type: 'light' | 'medium' | 'heavy' = 'medium'
+  ): void {
     if ('vibrate' in navigator) {
       const patterns = {
         light: [10],
         medium: [20],
-        heavy: [30, 10, 30]
+        heavy: [30, 10, 30],
       };
-      
+
       navigator.vibrate(patterns[type]);
     }
   }
@@ -278,7 +297,7 @@ export class AdEffectsService {
    */
   private static addCoinFallAnimation(): void {
     if (document.getElementById('coin-fall-animation')) return;
-    
+
     const style = document.createElement('style');
     style.id = 'coin-fall-animation';
     style.textContent = `
@@ -298,7 +317,7 @@ export class AdEffectsService {
 
   private static addGemSparkleAnimation(): void {
     if (document.getElementById('gem-sparkle-animation')) return;
-    
+
     const style = document.createElement('style');
     style.id = 'gem-sparkle-animation';
     style.textContent = `
@@ -321,7 +340,7 @@ export class AdEffectsService {
 
   private static addGrowthPulseAnimation(): void {
     if (document.getElementById('growth-pulse-animation')) return;
-    
+
     const style = document.createElement('style');
     style.id = 'growth-pulse-animation';
     style.textContent = `
@@ -344,7 +363,7 @@ export class AdEffectsService {
 
   private static addBoostPopAnimation(): void {
     if (document.getElementById('boost-pop-animation')) return;
-    
+
     const style = document.createElement('style');
     style.id = 'boost-pop-animation';
     style.textContent = `
@@ -373,7 +392,7 @@ export class AdEffectsService {
     return {
       activeEffectsCount: this.activeEffects.size,
       totalEffectsTriggered: this.effectCounter,
-      activeEffectIds: Array.from(this.activeEffects.keys())
+      activeEffectIds: Array.from(this.activeEffects.keys()),
     };
   }
 }

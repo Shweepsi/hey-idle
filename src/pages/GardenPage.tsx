@@ -1,4 +1,3 @@
-
 import { useEffect } from 'react';
 import { useAndroidBackButton } from '@/hooks/useAndroidBackButton';
 import { useNavigate } from 'react-router-dom';
@@ -8,11 +7,7 @@ import { GardenClockProvider } from '@/contexts/GardenClockContext';
 
 export const GardenPage = () => {
   const navigate = useNavigate();
-  const { 
-    gameState, 
-    harvestPlant, 
-    unlockPlot 
-  } = useRefactoredGame();
+  const { gameState, harvestPlant, unlockPlot } = useRefactoredGame();
 
   // Gestion du bouton retour Android : rester sur le jardin
   useAndroidBackButton(true, () => {
@@ -22,10 +17,10 @@ export const GardenPage = () => {
   useEffect(() => {
     // Réinitialiser le scroll en haut de la page
     window.scrollTo(0, 0);
-    
+
     // Bloquer le scroll sur cette page
     document.body.style.overflow = 'hidden';
-    
+
     // Nettoyer en quittant la page
     return () => {
       document.body.style.overflow = 'auto';

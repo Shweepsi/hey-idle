@@ -11,69 +11,82 @@ export const useOptimizedGameData = () => {
   const queryClient = useQueryClient();
 
   // Mise à jour optimisée d'une parcelle spécifique
-  const updatePlotOptimistically = useCallback((
-    plotNumber: number, 
-    updates: { plant_type?: string | null; planted_at?: string | null; growth_time_seconds?: number | null }
-  ) => {
-    queryClient.setQueryData(['gameData', user?.id], (old: any) => {
-      if (!old) return old;
+  const updatePlotOptimistically = useCallback(
+    (
+      plotNumber: number,
+      updates: {
+        plant_type?: string | null;
+        planted_at?: string | null;
+        growth_time_seconds?: number | null;
+      }
+    ) => {
+      queryClient.setQueryData(['gameData', user?.id], (old: any) => {
+        if (!old) return old;
 
-      return {
-        ...old,
-        plots: old.plots.map((plot: any) => 
-          plot.plot_number === plotNumber 
-            ? { ...plot, ...updates, updated_at: new Date().toISOString() }
-            : plot
-        )
-      };
-    });
-  }, [queryClient, user?.id]);
+        return {
+          ...old,
+          plots: old.plots.map((plot: any) =>
+            plot.plot_number === plotNumber
+              ? { ...plot, ...updates, updated_at: new Date().toISOString() }
+              : plot
+          ),
+        };
+      });
+    },
+    [queryClient, user?.id]
+  );
 
   // Mise à jour optimisée du jardin
-  const updateGardenOptimistically = useCallback((updates: {
-    coins?: number;
-    gems?: number;
-    experience?: number;
-    level?: number;
-    total_harvests?: number;
-  }) => {
-    queryClient.setQueryData(['gameData', user?.id], (old: any) => {
-      if (!old) return old;
+  const updateGardenOptimistically = useCallback(
+    (updates: {
+      coins?: number;
+      gems?: number;
+      experience?: number;
+      level?: number;
+      total_harvests?: number;
+    }) => {
+      queryClient.setQueryData(['gameData', user?.id], (old: any) => {
+        if (!old) return old;
 
-      return {
-        ...old,
-        garden: {
-          ...old.garden,
-          ...updates,
-          last_played: new Date().toISOString()
-        }
-      };
-    });
-  }, [queryClient, user?.id]);
+        return {
+          ...old,
+          garden: {
+            ...old.garden,
+            ...updates,
+            last_played: new Date().toISOString(),
+          },
+        };
+      });
+    },
+    [queryClient, user?.id]
+  );
 
   // Invalidation sélective pour des parties spécifiques
-  const invalidateSelectively = useCallback((
-    target: 'plots' | 'garden' | 'boosts' | 'all' = 'all',
-    refetchImmediate = false
-  ) => {
-    const baseOptions = { queryKey: ['gameData', user?.id] };
-    const options = refetchImmediate 
-      ? baseOptions 
-      : { ...baseOptions, refetchType: 'none' as const };
+  const invalidateSelectively = useCallback(
+    (
+      target: 'plots' | 'garden' | 'boosts' | 'all' = 'all',
+      refetchImmediate = false
+    ) => {
+      const baseOptions = { queryKey: ['gameData', user?.id] };
+      const options = refetchImmediate
+        ? baseOptions
+        : { ...baseOptions, refetchType: 'none' as const };
 
-    switch (target) {
-      case 'plots':
-      case 'garden':
-      case 'boosts':
-        // Pour l'instant, on invalide tout mais on peut étendre plus tard
-        queryClient.invalidateQueries(options);
-        break;
-      case 'all':
-      default:
-        queryClient.invalidateQueries(options);
-        break;
-    }
-  }, [queryClient, user?.id]);
+      switch (target) {
+        case 'plots':
+        case 'garden':
+        case 'boosts':
+          // Pour l'instant, on invalide tout mais on peut étendre plus tard
+          queryClient.invalidateQueries(options);
+          break;
+        case 'all':
+        default:
+          queryClient.invalidateQueries(options);
+          break;
+      }
+    },
+    [queryClient, user?.id]
+  );
 
   // Récupération optimisée des données depuis le cache
   const getCachedGameData = useCallback(() => {
@@ -81,10 +94,13 @@ export const useOptimizedGameData = () => {
   }, [queryClient, user?.id]);
 
   // Récupération optimisée d'une parcelle spécifique
-  const getCachedPlot = useCallback((plotNumber: number) => {
-    const gameData = getCachedGameData();
-    return gameData?.plots?.find((p: any) => p.plot_number === plotNumber);
-  }, [getCachedGameData]);
+  const getCachedPlot = useCallback(
+    (plotNumber: number) => {
+      const gameData = getCachedGameData();
+      return gameData?.plots?.find((p: any) => p.plot_number === plotNumber);
+    },
+    [getCachedGameData]
+  );
 
   // Vérification si les données sont en cache et fraîches
   const isCacheValid = useMemo(() => {
@@ -98,6 +114,6 @@ export const useOptimizedGameData = () => {
     invalidateSelectively,
     getCachedGameData,
     getCachedPlot,
-    isCacheValid
+    isCacheValid,
   };
 };

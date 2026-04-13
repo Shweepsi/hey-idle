@@ -26,7 +26,7 @@ export const useGameMultipliers = () => {
    */
   const getPermanentMultipliersOnly = (): GameMultipliers => {
     const permanentMultipliers = getActiveMultipliers();
-    
+
     return {
       harvest: permanentMultipliers.harvest,
       growth: permanentMultipliers.growth,
@@ -34,19 +34,19 @@ export const useGameMultipliers = () => {
       plantCostReduction: permanentMultipliers.plantCostReduction,
       gemChance: permanentMultipliers.gemChance,
       coins: 1, // Pas de boost temporaire pour le robot
-      gems: 1   // Pas de boost temporaire pour le robot
+      gems: 1, // Pas de boost temporaire pour le robot
     };
   };
 
   const getCompleteMultipliers = (): GameMultipliers => {
     // Récupérer les multiplicateurs permanents des améliorations
     const permanentMultipliers = getActiveMultipliers();
-    
+
     // Récupérer les boosts temporaires
     const coinBoost = getBoostMultiplier('coin_boost');
     const gemBoost = getBoostMultiplier('gem_boost');
     const growthBoost = getBoostMultiplier('growth_speed');
-    
+
     if (import.meta.env.DEV) {
       // Only log detailed multiplier information while developing.
       logger.debug('Game Multipliers', {
@@ -54,11 +54,11 @@ export const useGameMultipliers = () => {
         activeBoosts: { coinBoost, gemBoost, growthBoost },
         combined: {
           harvest: permanentMultipliers.harvest * coinBoost,
-          growth: permanentMultipliers.growth * growthBoost
-        }
+          growth: permanentMultipliers.growth * growthBoost,
+        },
       });
     }
-    
+
     return {
       // Multiplicateurs combinés permanents + temporaires
       harvest: permanentMultipliers.harvest * coinBoost,
@@ -67,13 +67,13 @@ export const useGameMultipliers = () => {
       plantCostReduction: permanentMultipliers.plantCostReduction,
       // Gem chance: Apply gem boost multiplier to base chance, capped at 100%
       gemChance: Math.min(1.0, permanentMultipliers.gemChance * gemBoost),
-      
+
       // Boosts spécifiques pour l'application directe
       coins: coinBoost,
-      gems: gemBoost
+      gems: gemBoost,
     };
   };
-  
+
   /**
    * Return the FINAL multiplier that should be applied for a given effect type.
    * This helper merges the permanent multipliers coming from upgrades with any
@@ -124,7 +124,7 @@ export const useGameMultipliers = () => {
   const applyAllBoosts = (coins: number, gems: number) => {
     return {
       coins: applyCoinsBoost(coins),
-      gems: applyGemsBoost(gems)
+      gems: applyGemsBoost(gems),
     };
   };
 
@@ -138,6 +138,6 @@ export const useGameMultipliers = () => {
     // Fonctions individuelles pour la compatibilité
     getBoostMultiplier,
     applyCoinsBoost,
-    applyGemsBoost
+    applyGemsBoost,
   };
 };

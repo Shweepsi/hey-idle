@@ -21,7 +21,7 @@ export class AdPollingService {
     const {
       maxAttempts = this.DEFAULT_MAX_ATTEMPTS,
       intervalMs = this.DEFAULT_INTERVAL_MS,
-      onProgress
+      onProgress,
     } = options;
 
     let attempts = 0;
@@ -31,7 +31,7 @@ export class AdPollingService {
       onProgress?.(attempts, maxAttempts);
 
       const updatedData = await refetchGameData();
-      
+
       if (!updatedData.data?.garden) {
         await this.delay(intervalMs);
         continue;
@@ -59,7 +59,7 @@ export class AdPollingService {
 
         return { success: true, gainedAmount };
       }
-      
+
       await this.delay(intervalMs);
     }
 
@@ -67,6 +67,6 @@ export class AdPollingService {
   }
 
   private static delay(ms: number): Promise<void> {
-    return new Promise(resolve => setTimeout(resolve, ms));
+    return new Promise((resolve) => setTimeout(resolve, ms));
   }
 }

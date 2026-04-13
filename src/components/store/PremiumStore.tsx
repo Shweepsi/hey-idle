@@ -1,5 +1,11 @@
 import { useState, useEffect } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Gem, ShoppingCart, Sparkles, Zap, Crown } from 'lucide-react';
@@ -19,31 +25,31 @@ export const PremiumStore = () => {
   useEffect(() => {
     const paymentStatus = searchParams.get('payment');
     const sessionId = searchParams.get('session_id');
-    
+
     if (paymentStatus === 'success' && sessionId) {
       setIsVerifying(true);
-      
+
       verifyPayment(sessionId).then((result) => {
         if (result.verified) {
           // Actualiser les données du jeu et le statut premium
           queryClient.invalidateQueries({ queryKey: ['gameData'] });
           queryClient.invalidateQueries({ queryKey: ['premiumStatus'] });
           toast({
-            title: "Merci !",
-            description: "Premium activé. Les publicités sont désactivées.",
-            variant: "default"
+            title: 'Merci !',
+            description: 'Premium activé. Les publicités sont désactivées.',
+            variant: 'default',
           });
         }
-        
+
         // Nettoyer les paramètres URL
         setSearchParams({});
         setIsVerifying(false);
       });
     } else if (paymentStatus === 'cancelled') {
       toast({
-        variant: "destructive",
-        title: "Paiement annulé",
-        description: "Votre paiement a été annulé",
+        variant: 'destructive',
+        title: 'Paiement annulé',
+        description: 'Votre paiement a été annulé',
       });
       setSearchParams({});
     }
@@ -70,7 +76,7 @@ export const PremiumStore = () => {
       <Card className="premium-card relative overflow-hidden border-2 border-purple-500/20 bg-gradient-to-br from-purple-500/5 to-pink-500/5">
         {/* Effet de brillance */}
         <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-yellow-400/20 to-transparent rounded-full blur-xl" />
-        
+
         <CardHeader className="relative">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
@@ -80,7 +86,10 @@ export const PremiumStore = () => {
               <div>
                 <CardTitle className="flex items-center gap-2">
                   🚀 Early Access Pack
-                  <Badge variant="secondary" className="text-xs bg-gradient-to-r from-purple-500 to-pink-500 text-white">
+                  <Badge
+                    variant="secondary"
+                    className="text-xs bg-gradient-to-r from-purple-500 to-pink-500 text-white"
+                  >
                     Populaire
                   </Badge>
                 </CardTitle>
@@ -107,7 +116,7 @@ export const PremiumStore = () => {
                 </div>
               </div>
             </div>
-            
+
             <div className="flex items-center gap-3 p-3 rounded-lg bg-background/50">
               <Zap className="h-5 w-5 text-yellow-400" />
               <div className="flex-1">
@@ -117,7 +126,7 @@ export const PremiumStore = () => {
                 </div>
               </div>
             </div>
-            
+
             <div className="flex items-center gap-3 p-3 rounded-lg bg-background/50">
               <Crown className="h-5 w-5 text-yellow-400" />
               <div className="flex-1">
@@ -129,7 +138,7 @@ export const PremiumStore = () => {
             </div>
           </div>
 
-          <Button 
+          <Button
             onClick={handlePurchase}
             disabled={isLoading || isVerifying}
             className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-medium py-3 rounded-lg transition-all hover:scale-105"

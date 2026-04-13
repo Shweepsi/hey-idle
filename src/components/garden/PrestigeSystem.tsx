@@ -33,7 +33,10 @@ export const PrestigeSystem = ({ garden, onPrestige }: PrestigeSystemProps) => {
   const costCoins = prestigeCostsCoins[prestigeLevel] || Infinity;
   const costGems = prestigeCostsGems[prestigeLevel] || Infinity;
   const nextMultiplier = getPrestigeMultiplier(prestigeLevel);
-  const canPrestige = garden.coins >= costCoins && (garden.gems || 0) >= costGems && prestigeLevel < 3;
+  const canPrestige =
+    garden.coins >= costCoins &&
+    (garden.gems || 0) >= costGems &&
+    prestigeLevel < 3;
   const isMaxPrestige = prestigeLevel >= 3;
 
   const handlePrestige = async () => {
@@ -42,7 +45,7 @@ export const PrestigeSystem = ({ garden, onPrestige }: PrestigeSystemProps) => {
       setIsProcessing(true);
 
       const { data, error } = await supabase.rpc('execute_prestige', {
-        p_user_id: garden.user_id
+        p_user_id: garden.user_id,
       });
 
       if (error) throw new Error(error.message);
@@ -60,13 +63,16 @@ export const PrestigeSystem = ({ garden, onPrestige }: PrestigeSystemProps) => {
       const appliedMult = result.permanent_multiplier ?? nextMultiplier;
       const appliedBonus = result.gem_bonus ?? 0;
 
-      toast.success(`🎉 Prestige accompli ! Multiplicateur permanent : X${appliedMult}`, {
-        description: `Vous repartez avec un bonus permanent de X${appliedMult} + ${appliedBonus} gemmes bonus + 2ème parcelle débloquée !`
-      });
+      toast.success(
+        `🎉 Prestige accompli ! Multiplicateur permanent : X${appliedMult}`,
+        {
+          description: `Vous repartez avec un bonus permanent de X${appliedMult} + ${appliedBonus} gemmes bonus + 2ème parcelle débloquée !`,
+        }
+      );
       onPrestige();
     } catch (error: any) {
       toast.error('Erreur lors du prestige', {
-        description: error.message
+        description: error.message,
       });
     } finally {
       setIsProcessing(false);
@@ -105,13 +111,17 @@ export const PrestigeSystem = ({ garden, onPrestige }: PrestigeSystemProps) => {
                 <div className="flex justify-center gap-4">
                   <div className="flex items-center gap-1">
                     <span className="text-yellow-600">🪙</span>
-                    <span className={`font-medium ${garden.coins >= costCoins ? 'text-green-600' : 'text-red-500'}`}>
+                    <span
+                      className={`font-medium ${garden.coins >= costCoins ? 'text-green-600' : 'text-red-500'}`}
+                    >
                       {costCoins.toLocaleString()}
                     </span>
                   </div>
                   <div className="flex items-center gap-1">
                     <span className="text-purple-600">💎</span>
-                    <span className={`font-medium ${(garden.gems || 0) >= costGems ? 'text-green-600' : 'text-red-500'}`}>
+                    <span
+                      className={`font-medium ${(garden.gems || 0) >= costGems ? 'text-green-600' : 'text-red-500'}`}
+                    >
                       {costGems.toLocaleString()}
                     </span>
                   </div>
@@ -132,7 +142,9 @@ export const PrestigeSystem = ({ garden, onPrestige }: PrestigeSystemProps) => {
                     <li>Niveau → 1</li>
                     <li>Pièces → 100</li>
                     <li>Améliorations → toutes réinitialisées</li>
-                    <li>Parcelles → seules les 2 premières restent débloquées</li>
+                    <li>
+                      Parcelles → seules les 2 premières restent débloquées
+                    </li>
                   </ul>
                   <div className="font-semibold mt-2 text-green-700">
                     ✓ Vous gardez : votre nouveau multiplicateur permanent.
@@ -148,19 +160,27 @@ export const PrestigeSystem = ({ garden, onPrestige }: PrestigeSystemProps) => {
               size="lg"
               className="w-full"
             >
-              {isProcessing ? 'Prestige en cours...' : canPrestige ? (
+              {isProcessing ? (
+                'Prestige en cours...'
+              ) : canPrestige ? (
                 <>
                   <Crown className="h-4 w-4 mr-2" />
                   Effectuer le Prestige
                 </>
-              ) : 'Fonds insuffisants'}
+              ) : (
+                'Fonds insuffisants'
+              )}
             </Button>
           </>
         ) : (
           <div className="text-center space-y-3">
-            <div className="text-lg font-bold text-purple-700">🏆 Prestige Maximum Atteint !</div>
+            <div className="text-lg font-bold text-purple-700">
+              🏆 Prestige Maximum Atteint !
+            </div>
             <div className="text-purple-600">
-              Félicitations ! Vous avez atteint le niveau de prestige maximum et profitez maintenant d'un multiplicateur permanent de X{garden.permanent_multiplier || 1}.
+              Félicitations ! Vous avez atteint le niveau de prestige maximum et
+              profitez maintenant d'un multiplicateur permanent de X
+              {garden.permanent_multiplier || 1}.
             </div>
           </div>
         )}

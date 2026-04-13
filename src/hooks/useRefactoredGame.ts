@@ -1,4 +1,3 @@
-
 import { useOptimisticGameData } from './useOptimisticGameData';
 import { usePlantActions } from './usePlantActions';
 import { useGameEconomy } from './useGameEconomy';
@@ -16,6 +15,6 @@ export const useRefactoredGame = () => {
     },
     loading: isLoading,
     ...plantActions,
-    ...economy
+    ...economy,
   };
 };
