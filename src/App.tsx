@@ -13,6 +13,14 @@ import { ScrollToTop } from '@/components/layout/ScrollToTop';
 import { ScreenOrientation } from '@capacitor/screen-orientation';
 import { Capacitor } from '@capacitor/core';
 import { logger } from '@/utils/logger';
+import { AdminRoute } from '@/admin/components/AdminRoute';
+import { AdminDashboardPage } from '@/admin/pages/AdminDashboardPage';
+import { AdminEconomyPage } from '@/admin/pages/AdminEconomyPage';
+import { AdminPlayersPage } from '@/admin/pages/AdminPlayersPage';
+import { AdminAuditPage } from '@/admin/pages/AdminAuditPage';
+import { AdminFlagsPage } from '@/admin/pages/AdminFlagsPage';
+import { AdminEventsPage } from '@/admin/pages/AdminEventsPage';
+import { AdminAdminsPage } from '@/admin/pages/AdminAdminsPage';
 
 const App = () => {
   useEffect(() => {
@@ -34,41 +42,23 @@ const App = () => {
       <ScrollToTop />
       <Routes>
         <Route path="/" element={<Navigate to="/garden" replace />} />
-        <Route
-          path="/garden"
-          element={
-            <AppLayout>
-              <GardenPage />
-            </AppLayout>
-          }
-        />
-        <Route
-          path="/upgrades"
-          element={
-            <AppLayout>
-              <UpgradesPage />
-            </AppLayout>
-          }
-        />
-        <Route
-          path="/profile"
-          element={
-            <AppLayout>
-              <ProfilePage />
-            </AppLayout>
-          }
-        />
-        <Route
-          path="/store"
-          element={
-            <AppLayout>
-              <StorePage />
-            </AppLayout>
-          }
-        />
+        <Route path="/garden"   element={<AppLayout><GardenPage /></AppLayout>} />
+        <Route path="/upgrades" element={<AppLayout><UpgradesPage /></AppLayout>} />
+        <Route path="/profile"  element={<AppLayout><ProfilePage /></AppLayout>} />
+        <Route path="/store"    element={<AppLayout><StorePage /></AppLayout>} />
+
+        {/* Admin dashboard — gated by is_admin check + auth */}
+        <Route path="/admin"            element={<AdminRoute><AdminDashboardPage /></AdminRoute>} />
+        <Route path="/admin/economy"    element={<AdminRoute><AdminEconomyPage /></AdminRoute>} />
+        <Route path="/admin/players"    element={<AdminRoute><AdminPlayersPage /></AdminRoute>} />
+        <Route path="/admin/audit"      element={<AdminRoute><AdminAuditPage /></AdminRoute>} />
+        <Route path="/admin/flags"      element={<AdminRoute><AdminFlagsPage /></AdminRoute>} />
+        <Route path="/admin/events"     element={<AdminRoute><AdminEventsPage /></AdminRoute>} />
+        <Route path="/admin/admins"     element={<AdminRoute requireSuperadmin><AdminAdminsPage /></AdminRoute>} />
+
         <Route path="/privacy" element={<PrivacyPolicyPage />} />
-        <Route path="/terms" element={<TermsOfServicePage />} />
-        <Route path="/about" element={<AboutPage />} />
+        <Route path="/terms"   element={<TermsOfServicePage />} />
+        <Route path="/about"   element={<AboutPage />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
     </>
