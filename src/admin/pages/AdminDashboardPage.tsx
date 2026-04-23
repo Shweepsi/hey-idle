@@ -2,7 +2,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { RefreshCcw, TrendingUp, Users, Coins, Gem, Sparkles, Zap } from 'lucide-react';
+import { RefreshCcw, TrendingUp, Users, Coins, Gem, Sparkles, Zap, SlidersHorizontal } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { AdminLayout } from '@/admin/components/AdminLayout';
 import { useAdminHealth, useAdminGlobalOverrides } from '@/admin/hooks/useAdminEconomy';
 import { useAdminAuditLog } from '@/admin/hooks/useAdminAudit';
@@ -68,6 +69,34 @@ export const AdminDashboardPage = () => {
         />
       </div>
 
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base flex items-center justify-between gap-2">
+            <span className="flex items-center gap-2">
+              <SlidersHorizontal className="h-4 w-4" />
+              Multiplicateurs actifs
+            </span>
+            <Link to="/admin/economy" className="text-xs font-normal text-muted-foreground hover:underline">Ajuster →</Link>
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {overrides ? (
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
+              <OverrideChip label="Récolte"   value={overrides.harvest_mult}   kind="mult" />
+              <OverrideChip label="Robot"     value={overrides.robot_mult}     kind="mult" />
+              <OverrideChip label="XP"        value={overrides.xp_mult}        kind="mult" />
+              <OverrideChip label="Croiss."   value={overrides.growth_mult}    kind="mult" />
+              <OverrideChip label="Essence"   value={overrides.essence_mult}   kind="mult" />
+              <OverrideChip label="Coût plante"   value={overrides.plant_cost_mult}    kind="mult" />
+              <OverrideChip label="Coût prestige" value={overrides.prestige_cost_mult}  kind="mult" />
+              <OverrideChip label="Gem bonus" value={overrides.gem_chance_bonus} kind="add" />
+            </div>
+          ) : (
+            <p className="text-sm text-muted-foreground">Chargement…</p>
+          )}
+        </CardContent>
+      </Card>
+
       <div className="grid gap-4 lg:grid-cols-2">
         <Card>
           <CardHeader><CardTitle className="text-base flex items-center gap-2"><TrendingUp className="h-4 w-4" /> Distribution du prestige</CardTitle></CardHeader>
@@ -130,6 +159,24 @@ export const AdminDashboardPage = () => {
         </CardContent>
       </Card>
     </AdminLayout>
+  );
+};
+
+const OverrideChip = ({ label, value, kind }: { label: string; value: number; kind: 'mult' | 'add' }) => {
+  const isDefault = kind === 'mult' ? value === 1 : value === 0;
+  const color = isDefault
+    ? 'border-muted bg-muted/30 text-muted-foreground'
+    : kind === 'mult' && value > 1
+      ? 'border-emerald-300 bg-emerald-50 text-emerald-900'
+      : kind === 'mult' && value < 1
+        ? 'border-red-300 bg-red-50 text-red-900'
+        : 'border-amber-300 bg-amber-50 text-amber-900';
+  const formatted = kind === 'mult' ? `×${value.toFixed(2)}` : `+${(value * 100).toFixed(1)}%`;
+  return (
+    <div className={`rounded-md border px-2 py-1.5 ${color}`}>
+      <div className="text-muted-foreground/70">{label}</div>
+      <div className="font-mono font-semibold">{formatted}</div>
+    </div>
   );
 };
 

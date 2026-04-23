@@ -16,6 +16,7 @@ import {
 } from '@/components/ui/tooltip';
 import { Clock } from 'lucide-react';
 import { usePremiumStatus } from '@/hooks/usePremiumStatus';
+import { useFeatureFlag } from '@/hooks/useFeatureFlag';
 import { DailyRewardDialog } from '@/components/garden/DailyRewardDialog';
 
 interface GameHeaderProps {
@@ -32,6 +33,7 @@ export const GameHeader = ({ garden: originalGarden }: GameHeaderProps) => {
   const { rewardState } = useUnifiedRewards();
   const { isPremium } = usePremiumStatus();
   const { boosts, formatTimeRemaining, getTimeRemaining } = useActiveBoosts();
+  const dailyRewardsEnabled = useFeatureFlag('daily_rewards_enabled', true);
   const mounted = useRef(true);
 
   // Track component mount/unmount to prevent state updates after unmount
@@ -268,9 +270,11 @@ export const GameHeader = ({ garden: originalGarden }: GameHeaderProps) => {
                   </span>
                 </div>
               )}
-              <div className="ml-auto">
-                <DailyRewardDialog />
-              </div>
+              {dailyRewardsEnabled && (
+                <div className="ml-auto">
+                  <DailyRewardDialog />
+                </div>
+              )}
             </div>
 
             {/* Ligne 3: Barre d'XP ultra-compacte */}

@@ -1151,9 +1151,37 @@ BEGIN
 END;
 $$;
 
+-- -----------------------------------------------------------------------------
+-- admin_list_admins — returns all admin rows joined with auth.users email and
+-- profiles.display_name so the admin management page can show identifiers,
+-- not bare UUIDs.
+-- -----------------------------------------------------------------------------
+CREATE OR REPLACE FUNCTION public.admin_list_admins()
+RETURNS json
+LANGUAGE plpgsql
+STABLE
+SECURITY DEFINER
+SET search_path TO ''
+AS $$
+DECLARE
+  v_admin_uid uuid;
+  v_rows json;
+BEGIN
+  v_admin_uid := public._admin_require();
+  SELECT json_agg(row_to_json(r) ORDER BY r.created_at) INTO v_rows FROM (
+    SELECT au.user_id, au.role, au.notes, au.created_at, u.email, p.display_name
+    FROM public.admin_users au
+    LEFT JOIN auth.users u ON u.id = au.user_id
+    LEFT JOIN public.profiles p ON p.id = au.user_id
+  ) r;
+  RETURN json_build_object('success', true, 'rows', COALESCE(v_rows, '[]'::json));
+END;
+$$;
+
 -- =============================================================================
 -- Grants
 -- =============================================================================
+GRANT EXECUTE ON FUNCTION public.admin_list_admins() TO authenticated;
 GRANT EXECUTE ON FUNCTION public.admin_update_economy_config(text, jsonb) TO authenticated;
 GRANT EXECUTE ON FUNCTION public.admin_reset_economy_overrides()          TO authenticated;
 GRANT EXECUTE ON FUNCTION public.admin_grant_currency(uuid, numeric, integer, numeric, text) TO authenticated;

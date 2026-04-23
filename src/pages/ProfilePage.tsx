@@ -4,6 +4,7 @@ import { SettingsModal } from '@/components/settings/SettingsModal';
 import { useRefactoredGame } from '@/hooks/useRefactoredGame';
 import { useAuth } from '@/hooks/useAuth';
 import { useAndroidBackButton } from '@/hooks/useAndroidBackButton';
+import { useFeatureFlag } from '@/hooks/useFeatureFlag';
 import { Button } from '@/components/ui/button';
 import { Loader2, LogOut, Settings, Trophy } from 'lucide-react';
 import { useQueryClient } from '@tanstack/react-query';
@@ -16,6 +17,7 @@ export const ProfilePage = () => {
   const queryClient = useQueryClient();
   const [showLadder, setShowLadder] = useState(false);
   const [showSettingsModal, setShowSettingsModal] = useState(false);
+  const ladderEnabled = useFeatureFlag('ladder_enabled', true);
 
   // Gestion du bouton retour Android
   useAndroidBackButton(true, () => {
@@ -44,25 +46,27 @@ export const ProfilePage = () => {
     <div className="min-h-full">
       {/* Content with padding */}
       <div className="px-3 pb-6 space-y-4">
-        {/* Carte des classements */}
-        <div className="glassmorphism rounded-xl p-4 shadow-lg">
-          <div className="space-y-3">
-            <div>
-              <h3 className="mobile-text-base font-semibold text-gray-800 mb-1">
-                Classements
-              </h3>
+        {/* Carte des classements — gated by feature flag */}
+        {ladderEnabled && (
+          <div className="glassmorphism rounded-xl p-4 shadow-lg">
+            <div className="space-y-3">
+              <div>
+                <h3 className="mobile-text-base font-semibold text-gray-800 mb-1">
+                  Classements
+                </h3>
+              </div>
+              <Button
+                onClick={() => setShowLadder(true)}
+                variant="outline"
+                size="lg"
+                className="w-full bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700 text-white font-semibold shadow-lg transform transition-all duration-200 hover:scale-105 active:scale-95 touch-target border-0"
+              >
+                <Trophy className="h-4 w-4 mr-2" />
+                Voir le Classement
+              </Button>
             </div>
-            <Button
-              onClick={() => setShowLadder(true)}
-              variant="outline"
-              size="lg"
-              className="w-full bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700 text-white font-semibold shadow-lg transform transition-all duration-200 hover:scale-105 active:scale-95 touch-target border-0"
-            >
-              <Trophy className="h-4 w-4 mr-2" />
-              Voir le Classement
-            </Button>
           </div>
-        </div>
+        )}
         {/* Système de Prestige */}
         {gameState.garden && (
           <PrestigeSystem

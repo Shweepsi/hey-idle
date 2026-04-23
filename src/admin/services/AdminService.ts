@@ -219,6 +219,28 @@ export const AdminService = {
   // -------------------------------------------------------------------------
   // Role management (superadmin only)
   // -------------------------------------------------------------------------
+  async listAdmins(): Promise<
+    Array<{
+      user_id: string;
+      role: 'admin' | 'superadmin';
+      notes: string | null;
+      created_at: string;
+      email: string | null;
+      display_name: string | null;
+    }>
+  > {
+    const { data, error } = await db.rpc('admin_list_admins');
+    if (error) throw error;
+    return unwrap<{ rows: Array<{
+      user_id: string;
+      role: 'admin' | 'superadmin';
+      notes: string | null;
+      created_at: string;
+      email: string | null;
+      display_name: string | null;
+    }> }>(data).rows;
+  },
+
   async addAdmin(targetUserId: string, role: 'admin' | 'superadmin', notes?: string) {
     const { data, error } = await db.rpc('admin_add_admin', {
       p_target_user_id: targetUserId,

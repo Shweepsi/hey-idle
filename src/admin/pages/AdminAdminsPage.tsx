@@ -8,19 +8,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { UserPlus, UserMinus } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { supabase } from '@/integrations/supabase/client';
 import { AdminLayout } from '@/admin/components/AdminLayout';
 import { AdminService } from '@/admin/services/AdminService';
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const db = supabase as any;
-
-interface AdminRow {
-  user_id: string;
-  role: 'admin' | 'superadmin';
-  notes: string | null;
-  created_at: string;
-}
+import { format } from 'date-fns';
 
 export const AdminAdminsPage = () => {
   const qc = useQueryClient();
@@ -28,19 +18,15 @@ export const AdminAdminsPage = () => {
   const [role, setRole] = useState<'admin' | 'superadmin'>('admin');
   const [notes, setNotes] = useState('');
 
-  const { data: admins = [], isLoading } = useQuery<AdminRow[]>({
-    queryKey: ['admins'],
-    queryFn: async () => {
-      const { data, error } = await db.from('admin_users').select('*').order('created_at');
-      if (error) throw error;
-      return data as AdminRow[];
-    },
+  const { data: admins = [], isLoading } = useQuery({
+    queryKey: ['adminList'],
+    queryFn: () => AdminService.listAdmins(),
   });
 
   const addMutation = useMutation({
     mutationFn: () => AdminService.addAdmin(userId.trim(), role, notes || undefined),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['admins'] });
+      qc.invalidateQueries({ queryKey: ['adminList'] });
       setUserId(''); setNotes('');
       toast.success('Admin ajouté');
     },
@@ -50,7 +36,7 @@ export const AdminAdminsPage = () => {
   const removeMutation = useMutation({
     mutationFn: (targetId: string) => AdminService.removeAdmin(targetId),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['admins'] });
+      qc.invalidateQueries({ queryKey: ['adminList'] });
       toast.success('Admin supprimé');
     },
     onError: (error: Error) => toast.error('Échec', { description: error.message }),
@@ -71,7 +57,11 @@ export const AdminAdminsPage = () => {
           <div className="grid md:grid-cols-3 gap-3">
             <div className="md:col-span-2">
               <Label className="text-xs">User ID (UUID auth.users.id)</Label>
-              <Input value={userId} onChange={(e) => setUserId(e.target.value)} placeholder="00000000-0000-0000-0000-000000000000" />
+              <Input
+                value={userId}
+                onChange={(e) => setUserId(e.target.value)}
+                placeholder="00000000-0000-0000-0000-000000000000"
+              />
             </div>
             <div>
               <Label className="text-xs">Rôle</Label>
@@ -86,7 +76,11 @@ export const AdminAdminsPage = () => {
           </div>
           <div>
             <Label className="text-xs">Notes (optionnel)</Label>
-            <Input value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="dev principal / community manager / QA …" />
+            <Input
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              placeholder="dev principal / community manager / QA …"
+            />
           </div>
           <Button size="sm" onClick={() => addMutation.mutate()} disabled={!userId || addMutation.isPending}>
             <UserPlus className="h-4 w-4 mr-2" /> Ajouter
@@ -95,24 +89,34 @@ export const AdminAdminsPage = () => {
       </Card>
 
       <Card>
-        <CardHeader><CardTitle className="text-base">Admins actuels</CardTitle></CardHeader>
+        <CardHeader><CardTitle className="text-base">Admins actuels ({admins.length})</CardTitle></CardHeader>
         <CardContent className="p-0 divide-y">
           {admins.map((admin) => (
             <div key={admin.user_id} className="p-4 flex items-center gap-3">
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">
-                  <code className="text-xs">{admin.user_id}</code>
+                  <span className="font-medium truncate">
+                    {admin.display_name || admin.email || admin.user_id.slice(0, 8)}
+                  </span>
                   <Badge variant={admin.role === 'superadmin' ? 'default' : 'secondary'}>
                     {admin.role}
                   </Badge>
+                  <span className="text-xs text-muted-foreground">
+                    ajouté {format(new Date(admin.created_at), 'yyyy-MM-dd')}
+                  </span>
                 </div>
-                {admin.notes && <p className="text-xs text-muted-foreground mt-1">{admin.notes}</p>}
+                <div className="text-xs text-muted-foreground truncate mt-1">
+                  {admin.email ?? '—'} · <code>{admin.user_id}</code>
+                </div>
+                {admin.notes && (
+                  <p className="text-xs text-muted-foreground mt-1 italic">"{admin.notes}"</p>
+                )}
               </div>
               <Button
                 size="sm"
                 variant="ghost"
                 onClick={() => {
-                  if (!confirm(`Supprimer l'admin ${admin.user_id} ?`)) return;
+                  if (!confirm(`Supprimer l'admin ${admin.email ?? admin.user_id} ?`)) return;
                   removeMutation.mutate(admin.user_id);
                 }}
                 disabled={removeMutation.isPending}
