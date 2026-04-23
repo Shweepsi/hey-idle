@@ -1,9 +1,10 @@
-import { Home, TrendingUp, User, Crown } from 'lucide-react';
+import { Home, TrendingUp, User, Crown, Shield } from 'lucide-react';
 import { ShoppingCart } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useUpgrades } from '@/hooks/useUpgrades';
 import { useGameData } from '@/hooks/useGameData';
 import { usePrestigeAvailability } from '@/hooks/usePrestigeAvailability';
+import { useIsAdmin } from '@/admin/hooks/useIsAdmin';
 import { useMemo } from 'react';
 import { MINIMUM_COINS_RESERVE } from '@/constants';
 
@@ -14,6 +15,7 @@ export const BottomNavigation = () => {
   const { data: gameData } = useGameData();
   const { getSequentialUpgrades, isUpgradePurchased } = useUpgrades();
   const { isPrestigeAvailable } = usePrestigeAvailability();
+  const { admin } = useIsAdmin();
 
   // Calculate available upgrades count
   const availableUpgradesCount = useMemo(() => {
@@ -42,6 +44,7 @@ export const BottomNavigation = () => {
     { path: '/upgrades', icon: TrendingUp, label: 'Améliorations' },
     { path: '/store', icon: ShoppingCart, label: 'Boutique' },
     { path: '/profile', icon: User, label: 'Profil' },
+    ...(admin ? [{ path: '/admin', icon: Shield, label: 'Admin' }] : []),
   ];
 
   return (
