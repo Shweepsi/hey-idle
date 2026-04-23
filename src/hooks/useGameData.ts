@@ -4,6 +4,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useEffect } from 'react';
 import { useAchievements } from '@/hooks/useAchievements';
 import { logger } from '@/utils/logger';
+import type { PlayerGarden } from '@/types/game';
 
 export const useGameData = () => {
   const { user } = useAuth();
@@ -44,8 +45,12 @@ export const useGameData = () => {
         supabase.from('plant_types').select('*'),
       ]);
 
+      // Cast garden row to our hand-written PlayerGarden type. The auto-gen
+      // Supabase types are stale re: economy-v2 columns (essence, daily_streak
+      // etc.), so we narrow once here instead of spraying casts across
+      // consumers.
       const result = {
-        garden: gardenResult.data,
+        garden: (gardenResult.data ?? null) as unknown as PlayerGarden | null,
         plots: plotsResult.data || [],
         plantTypes: plantTypesResult.data || [],
       };

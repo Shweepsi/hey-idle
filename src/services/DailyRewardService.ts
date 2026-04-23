@@ -1,10 +1,5 @@
-import { supabase } from '@/integrations/supabase/client';
+import { db, unwrapRpc } from '@/integrations/supabase/untyped';
 import { DAILY_REWARDS, type DailyReward } from '@/economy/config';
-
-// Auto-generated Supabase types don't include economy-v2 RPCs yet. Cast
-// narrowly; shapes are verified against the migration SQL.
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const db = supabase as any;
 
 export interface DailyClaimResult {
   streak: number;
@@ -29,19 +24,6 @@ export class DailyRewardService {
     const { data, error } = await db.rpc('claim_daily_reward', {
       p_user_id: userId,
     });
-    if (error) throw error;
-    const result = data as { success: boolean; error?: string } & DailyClaimResult;
-    if (!result?.success) {
-      throw new Error(result?.error || 'Daily reward claim failed');
-    }
-    return {
-      streak: result.streak,
-      streak_day: result.streak_day,
-      reward_coins: result.reward_coins,
-      reward_gems: result.reward_gems,
-      boost_type: result.boost_type,
-      boost_value: result.boost_value,
-      boost_minutes: result.boost_minutes,
-    };
+    return unwrapRpc(data, error, 'Daily reward claim failed');
   }
 }

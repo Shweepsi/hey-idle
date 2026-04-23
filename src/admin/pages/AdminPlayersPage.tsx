@@ -17,6 +17,7 @@ import {
 import { formatDistanceToNow, format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import type { PlayerSearchRow } from '@/admin/types';
+import { formatCompact } from '@/lib/utils';
 
 export const AdminPlayersPage = () => {
   const [query, setQuery] = useState('');
@@ -83,9 +84,9 @@ export const AdminPlayersPage = () => {
                     <td className="p-3 text-right">
                       <Badge variant="outline">P{row.prestige_level}</Badge>
                     </td>
-                    <td className="p-3 text-right font-mono">{compact(row.coins)}</td>
+                    <td className="p-3 text-right font-mono">{formatCompact(row.coins)}</td>
                     <td className="p-3 text-right font-mono">{row.gems.toLocaleString()}</td>
-                    <td className="p-3 text-right font-mono">{compact(row.essence)}</td>
+                    <td className="p-3 text-right font-mono">{formatCompact(row.essence)}</td>
                     <td className="p-3 text-right text-xs text-muted-foreground">
                       {row.last_played
                         ? formatDistanceToNow(new Date(row.last_played), { addSuffix: true, locale: fr })
@@ -114,17 +115,6 @@ export const AdminPlayersPage = () => {
   );
 };
 
-function compact(n: number): string {
-  if (n >= 1e12) return (n / 1e12).toFixed(1) + 'T';
-  if (n >= 1e9) return (n / 1e9).toFixed(1) + 'B';
-  if (n >= 1e6) return (n / 1e6).toFixed(1) + 'M';
-  if (n >= 1e3) return (n / 1e3).toFixed(1) + 'k';
-  return String(Math.round(n));
-}
-
-// -----------------------------------------------------------------------------
-// Player detail + actions dialog
-// -----------------------------------------------------------------------------
 const PlayerDetailDialog = ({
   player,
   onClose,
@@ -157,9 +147,9 @@ const PlayerDetailDialog = ({
         <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-xs">
           <StatPill label="Niveau" value={player.level} />
           <StatPill label="Prestige" value={player.prestige_level} />
-          <StatPill label="Pièces" value={compact(player.coins)} />
+          <StatPill label="Pièces" value={formatCompact(player.coins)} />
           <StatPill label="Gemmes" value={player.gems.toLocaleString()} />
-          <StatPill label="Essence" value={compact(player.essence)} />
+          <StatPill label="Essence" value={formatCompact(player.essence)} />
           <StatPill label="Récoltes" value={player.total_harvests.toLocaleString()} />
           <StatPill label="Créé" value={format(new Date(player.created_at), 'yyyy-MM-dd')} />
           <StatPill
@@ -270,9 +260,9 @@ const PlayerDetailDialog = ({
                   <div key={i} className="flex items-center justify-between">
                     <span>
                       <Badge variant="outline" className="mr-2">{e.event_type}</Badge>
-                      {e.coins_delta !== 0 ? `🪙${compact(e.coins_delta)}` : ''}
+                      {e.coins_delta !== 0 ? `🪙${formatCompact(e.coins_delta)}` : ''}
                       {e.gems_delta !== 0 ? ` 💎${e.gems_delta}` : ''}
-                      {e.essence_delta !== 0 ? ` ✨${compact(e.essence_delta)}` : ''}
+                      {e.essence_delta !== 0 ? ` ✨${formatCompact(e.essence_delta)}` : ''}
                     </span>
                     <span className="text-muted-foreground">
                       {formatDistanceToNow(new Date(e.created_at), { addSuffix: true, locale: fr })}

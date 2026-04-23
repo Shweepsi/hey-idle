@@ -1,10 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { db } from '@/integrations/supabase/untyped';
 import { useAuth } from '@/hooks/useAuth';
-
-// Auto-generated Supabase types don't include feature_flags yet.
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const db = supabase as any;
 
 interface FeatureFlagRow {
   key: string;
@@ -13,9 +9,8 @@ interface FeatureFlagRow {
 }
 
 /**
- * Deterministic per-user bucket in [0, 99] based on the user id. Lets us
- * do stable percentage rollouts — a user either sees the flag or they
- * don't, never flickers between renders.
+ * Deterministic per-user bucket in [0, 99] so percentage rollouts are stable
+ * — a user either sees the flag or they don't, never flickers between renders.
  */
 function userBucket(userId: string | null | undefined): number {
   if (!userId) return 0;
@@ -26,11 +21,8 @@ function userBucket(userId: string | null | undefined): number {
   return hash % 100;
 }
 
-/**
- * Batched flag fetch — one query per render cycle, results shared across all
- * useFeatureFlag callers.
- */
 const useFlagSet = () => {
+  const { user } = useAuth();
   return useQuery<Record<string, FeatureFlagRow>>({
     queryKey: ['featureFlags'],
     queryFn: async () => {
@@ -40,7 +32,8 @@ const useFlagSet = () => {
       for (const row of (data ?? []) as FeatureFlagRow[]) map[row.key] = row;
       return map;
     },
-    staleTime: 60_000,
+    enabled: !!user?.id,
+    staleTime: 5 * 60_000,
     refetchOnWindowFocus: true,
   });
 };
@@ -48,9 +41,7 @@ const useFlagSet = () => {
 /**
  * Read a feature flag for the current user. Returns true only when the flag
  * is enabled AND the user's deterministic bucket falls below the rollout %.
- *
- * `defaultValue` is returned while the flag map is still loading, so UI
- * defaults to a sensible state before the first network round-trip.
+ * Returns `defaultValue` while the flag map is still loading.
  */
 export const useFeatureFlag = (key: string, defaultValue = false): boolean => {
   const { user } = useAuth();

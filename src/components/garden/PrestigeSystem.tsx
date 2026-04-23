@@ -10,6 +10,7 @@ import {
   prestigeCostGems,
   prestigeMultiplier,
   essenceEarned,
+  MAX_PLOTS,
 } from '@/economy/config';
 import { useEconomySnapshot } from '@/hooks/useEconomySnapshot';
 
@@ -144,7 +145,7 @@ export const PrestigeSystem = ({ garden, onPrestige }: PrestigeSystemProps) => {
             </div>
             <div className="flex items-center justify-between text-emerald-700">
               <span>Parcelles conservées</span>
-              <strong>{plotsKept} / {snapshot?.garden.prestige_level !== undefined ? '12' : '12'}</strong>
+              <strong>{plotsKept} / {MAX_PLOTS}</strong>
             </div>
           </div>
         </div>

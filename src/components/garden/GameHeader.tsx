@@ -1,32 +1,30 @@
-import { Coins, Star, Sparkles } from 'lucide-react';
+import { Coins, Star, Sparkles, Clock } from 'lucide-react';
 import { PlayerGarden } from '@/types/game';
 import { useAnimations } from '@/contexts/AnimationContext';
 import { FloatingNumber } from '@/components/animations/FloatingNumber';
 import { ClaimRewardButton } from '@/components/ads/ClaimRewardButton';
-import { useEffect, useMemo, useRef } from 'react';
+import { useMemo } from 'react';
 import { useUnifiedRewards } from '@/hooks/useUnifiedRewards';
 import { useActiveBoosts } from '@/hooks/useActiveBoosts';
 import { useOptimisticGameData } from '@/hooks/useOptimisticGameData';
-import { gameDataEmitter } from '@/hooks/useGameDataNotifier';
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
-import { Clock } from 'lucide-react';
 import { usePremiumStatus } from '@/hooks/usePremiumStatus';
 import { useFeatureFlag } from '@/hooks/useFeatureFlag';
 import { DailyRewardDialog } from '@/components/garden/DailyRewardDialog';
+import { xpForLevel } from '@/economy/config';
+import { formatCompact } from '@/lib/utils';
 
 interface GameHeaderProps {
   garden: PlayerGarden | null;
 }
 
 export const GameHeader = ({ garden: originalGarden }: GameHeaderProps) => {
-  // Use optimistic game data for instant updates
-  const { gameData: optimisticData, addOptimisticUpdate } =
-    useOptimisticGameData();
+  const { gameData: optimisticData } = useOptimisticGameData();
   const garden = optimisticData?.garden || originalGarden;
   const { animations } = useAnimations();
 
@@ -34,51 +32,15 @@ export const GameHeader = ({ garden: originalGarden }: GameHeaderProps) => {
   const { isPremium } = usePremiumStatus();
   const { boosts, formatTimeRemaining, getTimeRemaining } = useActiveBoosts();
   const dailyRewardsEnabled = useFeatureFlag('daily_rewards_enabled', true);
-  const mounted = useRef(true);
 
-  // Track component mount/unmount to prevent state updates after unmount
-  useEffect(() => {
-    mounted.current = true;
-    return () => {
-      mounted.current = false;
-    };
-  }, []);
-
-  // Listen for reward claim events for instant visual feedback
-  useEffect(() => {
-    const handleRewardClaimed = () => {
-      // Force component re-render for instant feedback
-      // The optimistic data hook will handle the actual display updates
-    };
-
-    gameDataEmitter.on('reward-claimed', handleRewardClaimed);
-    gameDataEmitter.on('coins-claimed', handleRewardClaimed);
-    gameDataEmitter.on('gems-claimed', handleRewardClaimed);
-
-    return () => {
-      gameDataEmitter.off('reward-claimed', handleRewardClaimed);
-      gameDataEmitter.off('coins-claimed', handleRewardClaimed);
-      gameDataEmitter.off('gems-claimed', handleRewardClaimed);
-    };
-  }, []);
-
-  // Pas besoin de modal state pour le système unifié
-
-  // Calculer l'XP nécessaire pour le prochain niveau
-  const getXpForLevel = (level: number) => {
-    return Math.pow(level, 2) * 100;
-  };
-
-  // Mémoisé pour éviter les recalculs inutiles
   const xpStats = useMemo(() => {
     const currentLevel = garden?.level || 1;
     const currentXp = garden?.experience || 0;
-    const xpForCurrentLevel = getXpForLevel(currentLevel - 1);
-    const xpForNextLevel = getXpForLevel(currentLevel);
+    const xpForCurrentLevel = xpForLevel(currentLevel);
+    const xpForNextLevel = xpForLevel(currentLevel + 1);
     const xpProgress = currentXp - xpForCurrentLevel;
     const xpNeeded = xpForNextLevel - xpForCurrentLevel;
     const progressPercentage = Math.min((xpProgress / xpNeeded) * 100, 100);
-
     return { currentLevel, currentXp, progressPercentage };
   }, [garden?.level, garden?.experience]);
 
@@ -123,14 +85,6 @@ export const GameHeader = ({ garden: originalGarden }: GameHeaderProps) => {
       }`,
     };
   }, [rewardState?.dailyCount, rewardState?.maxDaily, isPremium]);
-
-  const compactNumber = (n: number): string => {
-    if (n >= 1e12) return (n / 1e12).toFixed(1) + 'T';
-    if (n >= 1e9) return (n / 1e9).toFixed(1) + 'B';
-    if (n >= 1e6) return (n / 1e6).toFixed(1) + 'M';
-    if (n >= 1e3) return (n / 1e3).toFixed(1) + 'k';
-    return n.toLocaleString();
-  };
 
   const getBoostIcon = (effectType: string) => {
     switch (effectType) {
@@ -194,11 +148,7 @@ export const GameHeader = ({ garden: originalGarden }: GameHeaderProps) => {
                     <Coins className="h-2 w-2 xs:h-2.5 xs:w-2.5 text-white" />
                   </div>
                   <span className="font-bold text-yellow-700 text-[0.65rem] xs:mobile-text-sm truncate">
-                    {(garden?.coins || 0) >= 1000000
-                      ? `${((garden?.coins || 0) / 1000000).toFixed(1)}M`
-                      : (garden?.coins || 0) >= 1000
-                        ? `${((garden?.coins || 0) / 1000).toFixed(1)}K`
-                        : (garden?.coins || 0).toLocaleString()}
+                    {formatCompact(garden?.coins ?? 0)}
                   </span>
                 </div>
 
@@ -260,13 +210,13 @@ export const GameHeader = ({ garden: originalGarden }: GameHeaderProps) => {
 
             {/* Ligne 2: Essence (meta-currency) + Bonus quotidien */}
             <div className="flex items-center gap-1.5">
-              {((garden as { essence?: number } | null | undefined)?.essence ?? 0) > 0 && (
+              {(garden?.essence ?? 0) > 0 && (
                 <div className="premium-card rounded-lg px-2 py-1 flex items-center gap-1.5 flex-shrink-0">
                   <div className="w-4 h-4 shrink-0 bg-gradient-to-br from-pink-400 to-purple-500 rounded-full flex items-center justify-center">
                     <Sparkles className="h-2.5 w-2.5 text-white" />
                   </div>
                   <span className="font-bold text-pink-700 text-[0.7rem]">
-                    {compactNumber((garden as { essence?: number } | null | undefined)?.essence ?? 0)}
+                    {formatCompact(garden?.essence ?? 0)}
                   </span>
                 </div>
               )}
@@ -354,8 +304,6 @@ export const GameHeader = ({ garden: originalGarden }: GameHeaderProps) => {
         </div>
       </div>
 
-      {/* Modals - using safe state setter and conditional rendering */}
-      {mounted.current && <></>}
     </div>
   );
 };

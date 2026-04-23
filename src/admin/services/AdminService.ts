@@ -1,5 +1,8 @@
-import { supabase } from '@/integrations/supabase/client';
+import { db, unwrapRpc } from '@/integrations/supabase/untyped';
 import type {
+  AdminEventType,
+  AdminRole,
+  AdminRow,
   AuditLogRow,
   EconomyHealth,
   FeatureFlag,
@@ -9,30 +12,13 @@ import type {
   ScheduledEvent,
 } from '@/admin/types';
 
-// Auto-generated Supabase types don't include admin tables/RPCs yet. We cast
-// once here and let services stay typed via our own interfaces.
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const db = supabase as any;
-
-function unwrap<T>(data: any, fallback?: T): T {
-  if (!data) throw new Error('Empty RPC response');
-  if (data.success === false) throw new Error(data.error || 'Unknown admin error');
-  return (data as T) ?? (fallback as T);
-}
-
 /**
- * Single facade for all admin RPCs. Every method throws on non-success so
+ * Facade over every admin RPC. Every method throws on non-success so
  * react-query / toast handlers can treat failures uniformly.
  */
 export const AdminService = {
-  // -------------------------------------------------------------------------
-  // Authorization
-  //
-  // We use the is_admin() / is_superadmin() RPCs instead of SELECTing
-  // admin_users directly. Both are SECURITY DEFINER and bypass RLS, so the
-  // client never needs a SELECT policy on the table — removing the class of
-  // "admin row exists but RLS hides it" bugs.
-  // -------------------------------------------------------------------------
+  // Uses SECURITY DEFINER RPCs instead of SELECTing admin_users directly —
+  // removes the "row exists but RLS hides it" failure mode.
   async amIAdmin(userId: string): Promise<{ admin: boolean; superadmin: boolean }> {
     const [adminRes, superRes] = await Promise.all([
       db.rpc('is_admin', { p_user_id: userId }),
@@ -46,9 +32,6 @@ export const AdminService = {
     };
   },
 
-  // -------------------------------------------------------------------------
-  // Economy config (global_overrides row is the hot one)
-  // -------------------------------------------------------------------------
   async loadGlobalOverrides(): Promise<GlobalOverrides> {
     const { data, error } = await db
       .from('economy_configs')
@@ -59,46 +42,33 @@ export const AdminService = {
     return data.value as GlobalOverrides;
   },
 
-  async updateGlobalOverrides(
-    patch: Partial<GlobalOverrides>
-  ): Promise<GlobalOverrides> {
+  async updateGlobalOverrides(patch: Partial<GlobalOverrides>): Promise<GlobalOverrides> {
     const { data, error } = await db.rpc('admin_update_economy_config', {
       p_key: 'global_overrides',
       p_patch: patch,
     });
-    if (error) throw error;
-    return unwrap<{ key: string; value: GlobalOverrides }>(data).value;
+    return unwrapRpc<{ value: GlobalOverrides }>(data, error, 'Update failed').value;
   },
 
   async resetOverrides(): Promise<GlobalOverrides> {
     const { data, error } = await db.rpc('admin_reset_economy_overrides');
-    if (error) throw error;
-    return unwrap<{ value: GlobalOverrides }>(data).value;
+    return unwrapRpc<{ value: GlobalOverrides }>(data, error, 'Reset failed').value;
   },
 
-  // -------------------------------------------------------------------------
-  // Players
-  // -------------------------------------------------------------------------
-  async searchPlayers(
-    query: string,
-    limit = 25,
-    offset = 0
-  ): Promise<PlayerSearchRow[]> {
+  async searchPlayers(query: string, limit = 25, offset = 0): Promise<PlayerSearchRow[]> {
     const { data, error } = await db.rpc('admin_search_players', {
       p_query: query,
       p_limit: limit,
       p_offset: offset,
     });
-    if (error) throw error;
-    return unwrap<{ rows: PlayerSearchRow[] }>(data).rows;
+    return unwrapRpc<{ rows: PlayerSearchRow[] }>(data, error, 'Search failed').rows;
   },
 
   async getPlayerDetail(targetUserId: string): Promise<PlayerDetail> {
     const { data, error } = await db.rpc('admin_get_player_detail', {
       p_target_user_id: targetUserId,
     });
-    if (error) throw error;
-    return unwrap<PlayerDetail>(data);
+    return unwrapRpc<PlayerDetail>(data, error, 'Detail fetch failed');
   },
 
   async grantCurrency(
@@ -106,7 +76,7 @@ export const AdminService = {
     coins: number,
     gems: number,
     essence: number,
-    reason: string
+    reason: string,
   ) {
     const { data, error } = await db.rpc('admin_grant_currency', {
       p_target_user_id: targetUserId,
@@ -115,8 +85,11 @@ export const AdminService = {
       p_essence: essence,
       p_reason: reason,
     });
-    if (error) throw error;
-    return unwrap<{ new_coins: number; new_gems: number; new_essence: number }>(data);
+    return unwrapRpc<{ new_coins: number; new_gems: number; new_essence: number }>(
+      data,
+      error,
+      'Grant failed',
+    );
   },
 
   async resetPlayer(targetUserId: string, reason: string) {
@@ -124,41 +97,29 @@ export const AdminService = {
       p_target_user_id: targetUserId,
       p_reason: reason,
     });
-    if (error) throw error;
-    return unwrap<{ success: true }>(data);
+    return unwrapRpc<{ success: true }>(data, error, 'Reset failed');
   },
 
-  // -------------------------------------------------------------------------
-  // Health & audit
-  // -------------------------------------------------------------------------
   async getHealth(): Promise<EconomyHealth> {
     const { data, error } = await db.rpc('admin_get_economy_health');
-    if (error) throw error;
-    return unwrap<EconomyHealth>(data);
+    return unwrapRpc<EconomyHealth>(data, error, 'Health fetch failed');
   },
 
   async getAuditLog(
     limit = 50,
     offset = 0,
-    actionFilter: string | null = null
+    actionFilter: string | null = null,
   ): Promise<AuditLogRow[]> {
     const { data, error } = await db.rpc('admin_get_audit_log', {
       p_limit: limit,
       p_offset: offset,
       p_action_filter: actionFilter,
     });
-    if (error) throw error;
-    return unwrap<{ rows: AuditLogRow[] }>(data).rows;
+    return unwrapRpc<{ rows: AuditLogRow[] }>(data, error, 'Audit fetch failed').rows;
   },
 
-  // -------------------------------------------------------------------------
-  // Feature flags
-  // -------------------------------------------------------------------------
   async listFlags(): Promise<FeatureFlag[]> {
-    const { data, error } = await db
-      .from('feature_flags')
-      .select('*')
-      .order('key');
+    const { data, error } = await db.from('feature_flags').select('*').order('key');
     if (error) throw error;
     return (data ?? []) as FeatureFlag[];
   },
@@ -166,20 +127,16 @@ export const AdminService = {
   async toggleFlag(
     key: string,
     enabled: boolean,
-    rolloutPercent?: number
+    rolloutPercent?: number,
   ): Promise<FeatureFlag> {
     const { data, error } = await db.rpc('admin_toggle_feature_flag', {
       p_key: key,
       p_enabled: enabled,
       p_rollout_percent: rolloutPercent ?? null,
     });
-    if (error) throw error;
-    return unwrap<{ flag: FeatureFlag }>(data).flag;
+    return unwrapRpc<{ flag: FeatureFlag }>(data, error, 'Flag update failed').flag;
   },
 
-  // -------------------------------------------------------------------------
-  // Scheduled events
-  // -------------------------------------------------------------------------
   async listEvents(): Promise<ScheduledEvent[]> {
     const { data, error } = await db
       .from('scheduled_events')
@@ -192,7 +149,7 @@ export const AdminService = {
 
   async createEvent(input: {
     name: string;
-    event_type: string;
+    event_type: AdminEventType;
     multiplier: number;
     starts_at: string;
     ends_at: string;
@@ -206,56 +163,32 @@ export const AdminService = {
       p_ends_at: input.ends_at,
       p_banner_message: input.banner_message,
     });
-    if (error) throw error;
-    return unwrap<{ id: string }>(data).id;
+    return unwrapRpc<{ id: string }>(data, error, 'Create failed').id;
   },
 
   async deleteEvent(id: string) {
     const { data, error } = await db.rpc('admin_delete_event', { p_id: id });
-    if (error) throw error;
-    return unwrap<{ success: true }>(data);
+    return unwrapRpc<{ success: true }>(data, error, 'Delete failed');
   },
 
-  // -------------------------------------------------------------------------
-  // Role management (superadmin only)
-  // -------------------------------------------------------------------------
-  async listAdmins(): Promise<
-    Array<{
-      user_id: string;
-      role: 'admin' | 'superadmin';
-      notes: string | null;
-      created_at: string;
-      email: string | null;
-      display_name: string | null;
-    }>
-  > {
+  async listAdmins(): Promise<AdminRow[]> {
     const { data, error } = await db.rpc('admin_list_admins');
-    if (error) throw error;
-    return unwrap<{ rows: Array<{
-      user_id: string;
-      role: 'admin' | 'superadmin';
-      notes: string | null;
-      created_at: string;
-      email: string | null;
-      display_name: string | null;
-    }> }>(data).rows;
+    return unwrapRpc<{ rows: AdminRow[] }>(data, error, 'List admins failed').rows;
   },
 
-  async addAdmin(targetUserId: string, role: 'admin' | 'superadmin', notes?: string) {
+  async addAdmin(targetUserId: string, role: AdminRole, notes?: string) {
     const { data, error } = await db.rpc('admin_add_admin', {
       p_target_user_id: targetUserId,
       p_role: role,
       p_notes: notes ?? null,
     });
-    if (error) throw error;
-    return unwrap<{ success: true }>(data);
+    return unwrapRpc<{ success: true }>(data, error, 'Add admin failed');
   },
 
   async removeAdmin(targetUserId: string) {
     const { data, error } = await db.rpc('admin_remove_admin', {
       p_target_user_id: targetUserId,
     });
-    if (error) throw error;
-    return unwrap<{ success: true }>(data);
+    return unwrapRpc<{ success: true }>(data, error, 'Remove admin failed');
   },
 };

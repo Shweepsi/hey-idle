@@ -12,8 +12,7 @@ import { useGameData } from '@/hooks/useGameData';
 export const EssenceTreePanel = () => {
   const { catalog, isLoading, purchase, isPurchasing } = useEssenceUpgrades();
   const { data: gameData } = useGameData();
-  const essence =
-    (gameData?.garden as { essence?: number } | null | undefined)?.essence ?? 0;
+  const essence = gameData?.garden?.essence ?? 0;
 
   if (isLoading) {
     return (

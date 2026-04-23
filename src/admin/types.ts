@@ -5,6 +5,23 @@
 
 export type AdminRole = 'admin' | 'superadmin';
 
+export type AdminEventType =
+  | 'double_xp'
+  | 'double_coins'
+  | 'double_gems'
+  | 'essence_boost'
+  | 'growth_speed'
+  | 'custom';
+
+export interface AdminRow {
+  user_id: string;
+  role: AdminRole;
+  notes: string | null;
+  created_at: string;
+  email: string | null;
+  display_name: string | null;
+}
+
 export interface GlobalOverrides {
   harvest_mult: number;
   robot_mult: number;

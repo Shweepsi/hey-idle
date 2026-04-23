@@ -9,6 +9,7 @@ import { useAdminHealth, useAdminGlobalOverrides } from '@/admin/hooks/useAdminE
 import { useAdminAuditLog } from '@/admin/hooks/useAdminAudit';
 import { formatDistanceToNow } from 'date-fns';
 import { fr } from 'date-fns/locale';
+import { formatCompact } from '@/lib/utils';
 
 export const AdminDashboardPage = () => {
   const { data: health, isLoading, refetch, isRefetching } = useAdminHealth();
@@ -52,19 +53,19 @@ export const AdminDashboardPage = () => {
         <StatCard
           icon={<Coins className="h-4 w-4 text-amber-600" />}
           label="Pièces gagnées (24h)"
-          value={compact(t?.coins_earned_24h ?? 0)}
+          value={formatCompact(t?.coins_earned_24h ?? 0)}
           sub={`${t?.harvests_24h ?? 0} récoltes`}
         />
         <StatCard
           icon={<Gem className="h-4 w-4 text-purple-600" />}
           label="Gemmes gagnées (24h)"
-          value={compact(t?.gems_earned_24h ?? 0)}
+          value={formatCompact(t?.gems_earned_24h ?? 0)}
           sub={`${t?.active_boosts ?? 0} boosts actifs`}
         />
         <StatCard
           icon={<Sparkles className="h-4 w-4 text-pink-600" />}
           label="Essence gagnée (24h)"
-          value={compact(t?.essence_earned_24h ?? 0)}
+          value={formatCompact(t?.essence_earned_24h ?? 0)}
           sub={`${t?.prestiges_24h ?? 0} prestiges`}
         />
       </div>
@@ -162,18 +163,35 @@ export const AdminDashboardPage = () => {
   );
 };
 
-const OverrideChip = ({ label, value, kind }: { label: string; value: number; kind: 'mult' | 'add' }) => {
-  const isDefault = kind === 'mult' ? value === 1 : value === 0;
-  const color = isDefault
-    ? 'border-muted bg-muted/30 text-muted-foreground'
-    : kind === 'mult' && value > 1
-      ? 'border-emerald-300 bg-emerald-50 text-emerald-900'
-      : kind === 'mult' && value < 1
-        ? 'border-red-300 bg-red-50 text-red-900'
-        : 'border-amber-300 bg-amber-50 text-amber-900';
+type ChipTone = 'neutral' | 'up' | 'down' | 'additive';
+
+const TONE_CLASS: Record<ChipTone, string> = {
+  neutral:  'border-muted bg-muted/30 text-muted-foreground',
+  up:       'border-emerald-300 bg-emerald-50 text-emerald-900',
+  down:     'border-red-300 bg-red-50 text-red-900',
+  additive: 'border-amber-300 bg-amber-50 text-amber-900',
+};
+
+function chipTone(kind: 'mult' | 'add', value: number): ChipTone {
+  if (kind === 'mult' && value === 1) return 'neutral';
+  if (kind === 'add' && value === 0) return 'neutral';
+  if (kind === 'mult' && value > 1) return 'up';
+  if (kind === 'mult' && value < 1) return 'down';
+  return 'additive';
+}
+
+const OverrideChip = ({
+  label,
+  value,
+  kind,
+}: {
+  label: string;
+  value: number;
+  kind: 'mult' | 'add';
+}) => {
   const formatted = kind === 'mult' ? `×${value.toFixed(2)}` : `+${(value * 100).toFixed(1)}%`;
   return (
-    <div className={`rounded-md border px-2 py-1.5 ${color}`}>
+    <div className={`rounded-md border px-2 py-1.5 ${TONE_CLASS[chipTone(kind, value)]}`}>
       <div className="text-muted-foreground/70">{label}</div>
       <div className="font-mono font-semibold">{formatted}</div>
     </div>
@@ -193,10 +211,3 @@ const StatCard = ({ icon, label, value, sub }: { icon: React.ReactNode; label: s
   </Card>
 );
 
-function compact(n: number): string {
-  if (n >= 1e12) return (n / 1e12).toFixed(1) + 'T';
-  if (n >= 1e9) return (n / 1e9).toFixed(1) + 'B';
-  if (n >= 1e6) return (n / 1e6).toFixed(1) + 'M';
-  if (n >= 1e3) return (n / 1e3).toFixed(1) + 'k';
-  return String(Math.round(n));
-}

@@ -10,12 +10,13 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { AdminLayout } from '@/admin/components/AdminLayout';
 import { AdminService } from '@/admin/services/AdminService';
+import type { AdminRole } from '@/admin/types';
 import { format } from 'date-fns';
 
 export const AdminAdminsPage = () => {
   const qc = useQueryClient();
   const [userId, setUserId] = useState('');
-  const [role, setRole] = useState<'admin' | 'superadmin'>('admin');
+  const [role, setRole] = useState<AdminRole>('admin');
   const [notes, setNotes] = useState('');
 
   const { data: admins = [], isLoading } = useQuery({
@@ -65,7 +66,7 @@ export const AdminAdminsPage = () => {
             </div>
             <div>
               <Label className="text-xs">Rôle</Label>
-              <Select value={role} onValueChange={(v) => setRole(v as 'admin' | 'superadmin')}>
+              <Select value={role} onValueChange={(v) => setRole(v as AdminRole)}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="admin">Admin</SelectItem>

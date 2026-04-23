@@ -17,10 +17,7 @@ export const StorePage = () => {
 
   // Only surface the essence tree once the player has unlocked prestige (or
   // already earned essence). Keeps the store tidy for brand-new players.
-  const garden = gameData?.garden as
-    | { essence?: number; prestige_level?: number }
-    | null
-    | undefined;
+  const garden = gameData?.garden;
   const showEssenceTree =
     essenceEnabled &&
     ((garden?.essence ?? 0) > 0 || (garden?.prestige_level ?? 0) > 0);

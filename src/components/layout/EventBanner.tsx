@@ -1,34 +1,17 @@
 import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { db } from '@/integrations/supabase/untyped';
+import { useAuth } from '@/hooks/useAuth';
 import { AlertTriangle, Sparkles, CalendarClock } from 'lucide-react';
-
-// Auto-generated types don't include economy_configs yet.
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const db = supabase as any;
-
-interface GlobalOverrides {
-  event_name: string | null;
-  event_banner: string | null;
-  maintenance_mode: boolean;
-  maintenance_message: string | null;
-}
-
-interface ScheduledEventRow {
-  id: string;
-  name: string;
-  event_type: string;
-  multiplier: number;
-  starts_at: string;
-  ends_at: string;
-  banner_message: string | null;
-  active: boolean;
-}
+import type { GlobalOverrides, ScheduledEvent } from '@/admin/types';
 
 /**
- * Read-only banner driven by economy_configs.global_overrides. Shows either
- * the maintenance warning (priority) or an event banner set from /admin.
+ * Read-only banner driven by economy_configs.global_overrides with a fallback
+ * to the first currently-active scheduled_events row. Priority: maintenance
+ * > admin-set event_banner > scheduled event.
  */
 export const EventBanner = () => {
+  const { user } = useAuth();
+
   const { data } = useQuery<GlobalOverrides | null>({
     queryKey: ['globalOverrides'],
     queryFn: async () => {
@@ -40,11 +23,12 @@ export const EventBanner = () => {
       if (error) return null;
       return (data?.value ?? null) as GlobalOverrides | null;
     },
+    enabled: !!user?.id,
     staleTime: 60_000,
     refetchOnWindowFocus: true,
   });
 
-  const { data: activeEvents } = useQuery<ScheduledEventRow[]>({
+  const { data: activeEvents } = useQuery<ScheduledEvent[]>({
     queryKey: ['activeScheduledEvents'],
     queryFn: async () => {
       const nowIso = new Date().toISOString();
@@ -56,20 +40,20 @@ export const EventBanner = () => {
         .gte('ends_at', nowIso)
         .order('starts_at', { ascending: false });
       if (error) return [];
-      return (data ?? []) as ScheduledEventRow[];
+      return (data ?? []) as ScheduledEvent[];
     },
-    staleTime: 60_000,
-    refetchInterval: 60_000,
+    enabled: !!user?.id,
+    staleTime: 5 * 60_000,
+    refetchOnWindowFocus: true,
   });
-
-  if (!data && (!activeEvents || activeEvents.length === 0)) return null;
 
   if (data?.maintenance_mode) {
     return (
       <div className="bg-red-600 text-white text-xs px-3 py-1.5 flex items-center justify-center gap-2 shadow-sm">
         <AlertTriangle className="h-3.5 w-3.5 shrink-0" />
         <span className="truncate">
-          {data.maintenance_message || 'Maintenance en cours — certaines actions sont temporairement désactivées.'}
+          {data.maintenance_message ||
+            'Maintenance en cours — certaines actions sont temporairement désactivées.'}
         </span>
       </div>
     );
@@ -88,8 +72,6 @@ export const EventBanner = () => {
     );
   }
 
-  // Fall back to any currently-active scheduled_events row (the first one wins
-  // if multiple overlap; admins can curate priority via start time).
   const evt = activeEvents?.[0];
   if (evt) {
     return (
@@ -97,8 +79,7 @@ export const EventBanner = () => {
         <CalendarClock className="h-3.5 w-3.5 shrink-0" />
         <span className="truncate">
           <strong>{evt.name}</strong>
-          {evt.banner_message ? ` · ${evt.banner_message}` : ''}
-          {' · ×'}{evt.multiplier}
+          {evt.banner_message ? ` · ${evt.banner_message}` : ''} · ×{evt.multiplier}
         </span>
       </div>
     );

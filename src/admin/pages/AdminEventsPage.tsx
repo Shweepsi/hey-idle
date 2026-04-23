@@ -14,9 +14,10 @@ import {
 import { Trash2, Plus, Clock } from 'lucide-react';
 import { AdminLayout } from '@/admin/components/AdminLayout';
 import { useAdminEvents } from '@/admin/hooks/useAdminEvents';
+import type { AdminEventType } from '@/admin/types';
 import { format } from 'date-fns';
 
-const EVENT_TYPES = [
+const EVENT_TYPES: Array<{ value: AdminEventType; label: string }> = [
   { value: 'double_xp',      label: 'Double XP' },
   { value: 'double_coins',   label: 'Double pièces' },
   { value: 'double_gems',    label: 'Double gemmes' },
@@ -29,7 +30,7 @@ export const AdminEventsPage = () => {
   const { events, isLoading, create, remove, isMutating } = useAdminEvents();
 
   const [name, setName] = useState('');
-  const [type, setType] = useState('double_xp');
+  const [type, setType] = useState<AdminEventType>('double_xp');
   const [mult, setMult] = useState(2);
   const [startsAt, setStartsAt] = useState(() => new Date().toISOString().slice(0, 16));
   const [endsAt, setEndsAt] = useState(() => new Date(Date.now() + 48 * 3600 * 1000).toISOString().slice(0, 16));
@@ -62,7 +63,7 @@ export const AdminEventsPage = () => {
             </div>
             <div>
               <Label className="text-xs">Type</Label>
-              <Select value={type} onValueChange={setType}>
+              <Select value={type} onValueChange={(v) => setType(v as AdminEventType)}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
                   {EVENT_TYPES.map((t) => <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>)}
