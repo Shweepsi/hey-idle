@@ -208,8 +208,9 @@ UPDATE public.level_upgrades SET cost_coins = 800000   WHERE name = 'mythic_unlo
 UPDATE public.level_upgrades SET cost_coins = 4000000  WHERE name = 'prestige_unlock';
 
 -- Plot-cost function refactored to the new formula (src/economy/config.ts).
--- Still returns integer for bigint/numeric compat; plot 11-12 are gem-gated
--- inside unlock_plot_atomic_v2 (separate RPC in the v2 migration pair).
+-- Return type widened from integer to bigint — plot 12 at 2.8^10 overflows
+-- int32 (~17M). Drop first since CREATE OR REPLACE can't change return type.
+DROP FUNCTION IF EXISTS public.get_plot_unlock_cost(integer);
 CREATE OR REPLACE FUNCTION public.get_plot_unlock_cost(plot_number integer)
  RETURNS bigint
  LANGUAGE plpgsql

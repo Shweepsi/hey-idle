@@ -32,13 +32,11 @@ CREATE TABLE IF NOT EXISTS public.admin_users (
 CREATE INDEX IF NOT EXISTS idx_admin_users_role ON public.admin_users (role);
 
 ALTER TABLE public.admin_users ENABLE ROW LEVEL SECURITY;
--- No direct client writes. Reads are admin-only (checked via the is_admin helper).
-DROP POLICY IF EXISTS "Admins can view admin users" ON public.admin_users;
-CREATE POLICY "Admins can view admin users"
-  ON public.admin_users FOR SELECT
-  USING (EXISTS (
-    SELECT 1 FROM public.admin_users au WHERE au.user_id = (SELECT auth.uid())
-  ));
+-- No direct client writes. Reads go through public.is_admin() — a SECURITY
+-- DEFINER helper — so the policy doesn't recurse on its own table.
+--
+-- Forward reference to is_admin(): we define is_admin below, then create the
+-- policy at the bottom of this migration (after the function exists).
 
 -- -----------------------------------------------------------------------------
 -- is_admin / is_superadmin helpers  (SECURITY DEFINER, used by RLS + RPCs)
@@ -69,6 +67,13 @@ $$;
 
 GRANT EXECUTE ON FUNCTION public.is_admin(uuid) TO authenticated;
 GRANT EXECUTE ON FUNCTION public.is_superadmin(uuid) TO authenticated;
+
+-- Create the admin_users SELECT policy now that is_admin() exists. The helper
+-- is SECURITY DEFINER so it bypasses RLS and doesn't recurse.
+DROP POLICY IF EXISTS "Admins can view admin users" ON public.admin_users;
+CREATE POLICY "Admins can view admin users"
+  ON public.admin_users FOR SELECT
+  USING (public.is_admin((SELECT auth.uid())));
 
 -- -----------------------------------------------------------------------------
 -- economy_configs
