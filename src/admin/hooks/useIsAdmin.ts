@@ -14,14 +14,22 @@ export const useIsAdmin = () => {
     queryKey: ['isAdmin', user?.id],
     queryFn: async () => {
       if (!user?.id) return { admin: false, superadmin: false };
+      // Surface errors to console so we can see RPC/network failures during
+      // onboarding instead of silently denying access.
       try {
         return await AdminService.amIAdmin(user.id);
-      } catch {
+      } catch (error) {
+        if (import.meta.env.DEV) {
+          // eslint-disable-next-line no-console
+          console.error('[useIsAdmin] amIAdmin failed', error);
+        }
         return { admin: false, superadmin: false };
       }
     },
     enabled: !!user?.id,
-    staleTime: 5 * 60_000, // admin status rarely flips mid-session
+    // Shorter stale time so admin status reflects within a minute of change.
+    staleTime: 60_000,
+    retry: 1,
   });
 
   return {

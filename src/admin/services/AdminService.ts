@@ -27,18 +27,22 @@ function unwrap<T>(data: any, fallback?: T): T {
 export const AdminService = {
   // -------------------------------------------------------------------------
   // Authorization
+  //
+  // We use the is_admin() / is_superadmin() RPCs instead of SELECTing
+  // admin_users directly. Both are SECURITY DEFINER and bypass RLS, so the
+  // client never needs a SELECT policy on the table — removing the class of
+  // "admin row exists but RLS hides it" bugs.
   // -------------------------------------------------------------------------
   async amIAdmin(userId: string): Promise<{ admin: boolean; superadmin: boolean }> {
-    const { data, error } = await db
-      .from('admin_users')
-      .select('role')
-      .eq('user_id', userId)
-      .maybeSingle();
-    if (error) throw error;
-    if (!data) return { admin: false, superadmin: false };
+    const [adminRes, superRes] = await Promise.all([
+      db.rpc('is_admin', { p_user_id: userId }),
+      db.rpc('is_superadmin', { p_user_id: userId }),
+    ]);
+    if (adminRes.error) throw adminRes.error;
+    if (superRes.error) throw superRes.error;
     return {
-      admin: true,
-      superadmin: data.role === 'superadmin',
+      admin: adminRes.data === true,
+      superadmin: superRes.data === true,
     };
   },
 
