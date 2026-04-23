@@ -1,19 +1,31 @@
 import { PremiumStore } from '@/components/store/PremiumStore';
+import { EssenceTreePanel } from '@/components/store/EssenceTreePanel';
 import { useAndroidBackButton } from '@/hooks/useAndroidBackButton';
 import { useNavigate } from 'react-router-dom';
+import { useGameData } from '@/hooks/useGameData';
+
 export const StorePage = () => {
   const navigate = useNavigate();
+  const { data: gameData } = useGameData();
 
-  // Gestion du bouton retour Android : retour au jardin
   useAndroidBackButton(true, () => {
     navigate('/garden');
   });
 
+  // Only surface the essence tree once the player has unlocked prestige (or
+  // already earned essence). Keeps the store tidy for brand-new players.
+  const garden = gameData?.garden as
+    | { essence?: number; prestige_level?: number }
+    | null
+    | undefined;
+  const showEssenceTree =
+    (garden?.essence ?? 0) > 0 || (garden?.prestige_level ?? 0) > 0;
+
   return (
     <div className="min-h-full">
-      {/* Contenu principal */}
       <div className="px-3 pb-6 space-y-4">
         <PremiumStore />
+        {showEssenceTree && <EssenceTreePanel />}
       </div>
     </div>
   );

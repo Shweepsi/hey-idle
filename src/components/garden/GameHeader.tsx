@@ -1,25 +1,22 @@
-import { Coins, Sprout, Star, Gift } from 'lucide-react';
-import { Progress } from '@/components/ui/progress';
+import { Coins, Star, Sparkles } from 'lucide-react';
 import { PlayerGarden } from '@/types/game';
 import { useAnimations } from '@/contexts/AnimationContext';
 import { FloatingNumber } from '@/components/animations/FloatingNumber';
 import { ClaimRewardButton } from '@/components/ads/ClaimRewardButton';
-import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
-import { Button } from '@/components/ui/button';
+import { useEffect, useMemo, useRef } from 'react';
 import { useUnifiedRewards } from '@/hooks/useUnifiedRewards';
 import { useActiveBoosts } from '@/hooks/useActiveBoosts';
 import { useOptimisticGameData } from '@/hooks/useOptimisticGameData';
 import { gameDataEmitter } from '@/hooks/useGameDataNotifier';
-import { Badge } from '@/components/ui/badge';
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
-import { Zap, Clock } from 'lucide-react';
+import { Clock } from 'lucide-react';
 import { usePremiumStatus } from '@/hooks/usePremiumStatus';
-import { PremiumBadge } from '@/components/premium/PremiumBadge';
+import { DailyRewardDialog } from '@/components/garden/DailyRewardDialog';
 
 interface GameHeaderProps {
   garden: PlayerGarden | null;
@@ -124,6 +121,14 @@ export const GameHeader = ({ garden: originalGarden }: GameHeaderProps) => {
       }`,
     };
   }, [rewardState?.dailyCount, rewardState?.maxDaily, isPremium]);
+
+  const compactNumber = (n: number): string => {
+    if (n >= 1e12) return (n / 1e12).toFixed(1) + 'T';
+    if (n >= 1e9) return (n / 1e9).toFixed(1) + 'B';
+    if (n >= 1e6) return (n / 1e6).toFixed(1) + 'M';
+    if (n >= 1e3) return (n / 1e3).toFixed(1) + 'k';
+    return n.toLocaleString();
+  };
 
   const getBoostIcon = (effectType: string) => {
     switch (effectType) {
@@ -249,6 +254,23 @@ export const GameHeader = ({ garden: originalGarden }: GameHeaderProps) => {
                 variant="compact"
                 className={adButtonState.className}
               />
+            </div>
+
+            {/* Ligne 2: Essence (meta-currency) + Bonus quotidien */}
+            <div className="flex items-center gap-1.5">
+              {((garden as { essence?: number } | null | undefined)?.essence ?? 0) > 0 && (
+                <div className="premium-card rounded-lg px-2 py-1 flex items-center gap-1.5 flex-shrink-0">
+                  <div className="w-4 h-4 shrink-0 bg-gradient-to-br from-pink-400 to-purple-500 rounded-full flex items-center justify-center">
+                    <Sparkles className="h-2.5 w-2.5 text-white" />
+                  </div>
+                  <span className="font-bold text-pink-700 text-[0.7rem]">
+                    {compactNumber((garden as { essence?: number } | null | undefined)?.essence ?? 0)}
+                  </span>
+                </div>
+              )}
+              <div className="ml-auto">
+                <DailyRewardDialog />
+              </div>
             </div>
 
             {/* Ligne 3: Barre d'XP ultra-compacte */}

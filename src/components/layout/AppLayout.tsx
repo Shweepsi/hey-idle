@@ -1,5 +1,6 @@
 import { BottomNavigation } from './BottomNavigation';
 import { ProtectedRoute } from './ProtectedRoute';
+import { EventBanner } from './EventBanner';
 import { NetworkStatusIndicator } from '@/components/network/NetworkStatusIndicator';
 import { GameHeader } from '@/components/garden/GameHeader';
 import { useRefactoredGame } from '@/hooks/useRefactoredGame';
@@ -25,6 +26,9 @@ export const AppLayout = ({ children }: AppLayoutProps) => {
           <div className="particle"></div>
           <div className="particle"></div>
         </div>
+
+        {/* Live event / maintenance banner driven by admin dashboard */}
+        <EventBanner />
 
         {/* Persistent Game Header */}
         <div className="sticky top-0 z-40 bg-gradient-to-b from-white/80 to-transparent backdrop-blur-sm">
