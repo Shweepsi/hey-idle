@@ -3,7 +3,8 @@ name: Build Signed Android AAB & APK
 on:
   workflow_dispatch:
   push:
-    branches: [ main ]
+    tags:
+      - 'v*'
 
 permissions:
   contents: write
@@ -103,14 +104,18 @@ jobs:
           mv android/app/build/outputs/bundle/release/app-release.aab builds/IdleGrow.aab
           mv android/app/build/outputs/apk/release/app-release.apk builds/IdleGrow.apk
 
-      # Toujours générer un tag unique
-      - name: Tag commit
+      # If triggered by a tag push, reuse it. On workflow_dispatch, mint one.
+      - name: Determine tag
         run: |
-          TAG_NAME="v${{ github.run_number }}-$(echo $GITHUB_SHA | cut -c1-7)"
-          git config user.name "GitHub Actions"
-          git config user.email "actions@github.com"
-          git tag "$TAG_NAME" -f
-          git push origin "$TAG_NAME" -f
+          if [[ "${{ github.ref_type }}" == "tag" ]]; then
+            TAG_NAME="${{ github.ref_name }}"
+          else
+            TAG_NAME="v${{ github.run_number }}-$(echo $GITHUB_SHA | cut -c1-7)"
+            git config user.name "GitHub Actions"
+            git config user.email "actions@github.com"
+            git tag "$TAG_NAME" -f
+            git push origin "$TAG_NAME" -f
+          fi
           echo "TAG_NAME=$TAG_NAME" >> $GITHUB_ENV
 
       # Upload vers la release
