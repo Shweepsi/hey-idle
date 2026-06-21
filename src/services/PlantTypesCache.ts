@@ -59,14 +59,22 @@ class PlantTypesCacheService {
       throw new Error('Aucun type de plante trouvé');
     }
 
+    // Normalise les colonnes nullables de la base vers le type PlantType non-null.
+    const normalized: PlantType[] = plantTypes.map((p) => ({
+      ...p,
+      emoji: p.emoji ?? '🌱',
+      rarity: p.rarity ?? 'common',
+      level_required: p.level_required ?? 1,
+    }));
+
     // Mettre à jour le cache
-    this.cache = plantTypes;
+    this.cache = normalized;
     this.lastFetchTime = Date.now();
 
     console.log(
-      `✅ Types de plantes mis en cache (${plantTypes.length} types)`
+      `✅ Types de plantes mis en cache (${normalized.length} types)`
     );
-    return plantTypes;
+    return normalized;
   }
 
   /**

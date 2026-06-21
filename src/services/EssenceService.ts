@@ -1,4 +1,5 @@
-import { db, unwrapRpc } from '@/integrations/supabase/untyped';
+import { supabase as db } from '@/integrations/supabase/client';
+import { unwrapRpc } from '@/integrations/supabase/rpc';
 import type { PlayerEssenceUpgradeRow } from '@/types/game';
 import {
   ESSENCE_UPGRADES,

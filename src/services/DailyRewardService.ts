@@ -1,4 +1,5 @@
-import { db, unwrapRpc } from '@/integrations/supabase/untyped';
+import { supabase as db } from '@/integrations/supabase/client';
+import { unwrapRpc } from '@/integrations/supabase/rpc';
 import { DAILY_REWARDS, type DailyReward } from '@/economy/config';
 
 export interface DailyClaimResult {

@@ -141,7 +141,7 @@ export const LadderModal = ({ isOpen, onClose }: LadderModalProps) => {
     </div>
   );
   const CurrentUserRank = ({ category }: { category: string }) => {
-    const rank = currentUserRanks[category];
+    const rank = currentUserRanks[category as keyof typeof currentUserRanks];
     if (!rank) return null;
     return (
       <Card className="mb-4 bg-gradient-to-r from-green-50 to-emerald-50 border-green-200">

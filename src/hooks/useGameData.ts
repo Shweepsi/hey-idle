@@ -4,7 +4,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useEffect } from 'react';
 import { useAchievements } from '@/hooks/useAchievements';
 import { logger } from '@/utils/logger';
-import type { PlayerGarden } from '@/types/game';
+import type { PlayerGarden, PlantType } from '@/types/game';
 
 export const useGameData = () => {
   const { user } = useAuth();
@@ -52,7 +52,16 @@ export const useGameData = () => {
       const result = {
         garden: (gardenResult.data ?? null) as unknown as PlayerGarden | null,
         plots: plotsResult.data || [],
-        plantTypes: plantTypesResult.data || [],
+        // Normalise les colonnes nullables vers le type PlantType non-null,
+        // avec les mêmes défauts que PlantTypesCache.
+        plantTypes: (plantTypesResult.data || []).map(
+          (p): PlantType => ({
+            ...p,
+            emoji: p.emoji ?? '🌱',
+            rarity: p.rarity ?? 'common',
+            level_required: p.level_required ?? 1,
+          })
+        ),
       };
 
       // LOG détaillé de l'état des parcelles pour debug

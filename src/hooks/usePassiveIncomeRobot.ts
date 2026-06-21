@@ -9,6 +9,7 @@ import { toast } from 'sonner';
 import { useEffect, useCallback } from 'react';
 import { logger } from '@/utils/logger';
 import { ROBOT_MAX_ACCUMULATION_HOURS } from '@/constants';
+import type { PlantType } from '@/types/game';
 
 export const usePassiveIncomeRobot = () => {
   const { user } = useAuth();
@@ -74,7 +75,17 @@ export const usePassiveIncomeRobot = () => {
         .eq('level_required', robotPlantLevel)
         .maybeSingle();
 
-      return plantType;
+      if (!plantType) return null;
+
+      // Normalise les colonnes nullables vers le type PlantType non-null,
+      // avec les mêmes défauts que PlantTypesCache.
+      const normalized: PlantType = {
+        ...plantType,
+        emoji: plantType.emoji ?? '🌱',
+        rarity: plantType.rarity ?? 'common',
+        level_required: plantType.level_required ?? 1,
+      };
+      return normalized;
     },
     enabled: hasPassiveRobot && robotPlantLevel > 0,
   });
@@ -139,8 +150,9 @@ export const usePassiveIncomeRobot = () => {
     if (gameData.garden.robot_last_collected !== null) return;
 
     logger.debug('First robot activation detected - calling RPC');
-    supabase
-      .rpc('collect_robot_income_atomic', { p_user_id: user.id })
+    Promise.resolve(
+      supabase.rpc('collect_robot_income_atomic', { p_user_id: user.id })
+    )
       .then(() => {
         queryClient.invalidateQueries({ queryKey: ['gameData'] });
         queryClient.invalidateQueries({ queryKey: ['passiveRobotState'] });
@@ -200,7 +212,7 @@ export const usePassiveIncomeRobot = () => {
     if (!garden) return null;
 
     const lastPlayed = new Date(garden.last_played).getTime();
-    const lastCollected = new Date(garden.robot_last_collected).getTime();
+    const lastCollected = new Date(garden.robot_last_collected ?? 0).getTime();
     const now = Date.now();
 
     // Prendre le plus récent entre last_played et robot_last_collected

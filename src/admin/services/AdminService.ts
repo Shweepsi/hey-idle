@@ -1,4 +1,5 @@
-import { db, unwrapRpc } from '@/integrations/supabase/untyped';
+import { supabase as db } from '@/integrations/supabase/client';
+import { unwrapRpc } from '@/integrations/supabase/rpc';
 import type {
   AdminEventType,
   AdminRole,
@@ -39,7 +40,7 @@ export const AdminService = {
       .eq('key', 'global_overrides')
       .single();
     if (error) throw error;
-    return data.value as GlobalOverrides;
+    return data.value as unknown as GlobalOverrides;
   },
 
   async updateGlobalOverrides(patch: Partial<GlobalOverrides>): Promise<GlobalOverrides> {
@@ -113,7 +114,7 @@ export const AdminService = {
     const { data, error } = await db.rpc('admin_get_audit_log', {
       p_limit: limit,
       p_offset: offset,
-      p_action_filter: actionFilter,
+      p_action_filter: actionFilter ?? undefined,
     });
     return unwrapRpc<{ rows: AuditLogRow[] }>(data, error, 'Audit fetch failed').rows;
   },
@@ -132,7 +133,7 @@ export const AdminService = {
     const { data, error } = await db.rpc('admin_toggle_feature_flag', {
       p_key: key,
       p_enabled: enabled,
-      p_rollout_percent: rolloutPercent ?? null,
+      p_rollout_percent: rolloutPercent ?? undefined,
     });
     return unwrapRpc<{ flag: FeatureFlag }>(data, error, 'Flag update failed').flag;
   },
@@ -161,7 +162,8 @@ export const AdminService = {
       p_multiplier: input.multiplier,
       p_starts_at: input.starts_at,
       p_ends_at: input.ends_at,
-      p_banner_message: input.banner_message,
+      // Supabase ne reflète pas la nullabilité des args RPC ; le runtime accepte null.
+      p_banner_message: input.banner_message as string,
     });
     return unwrapRpc<{ id: string }>(data, error, 'Create failed').id;
   },
@@ -180,7 +182,7 @@ export const AdminService = {
     const { data, error } = await db.rpc('admin_add_admin', {
       p_target_user_id: targetUserId,
       p_role: role,
-      p_notes: notes ?? null,
+      p_notes: notes ?? undefined,
     });
     return unwrapRpc<{ success: true }>(data, error, 'Add admin failed');
   },

@@ -15,7 +15,7 @@ export class AdCooldownService {
 
       // Utiliser la fonction ad-rewards existante avec GET
       const { data, error } = await supabase.functions.invoke('ad-rewards', {
-        body: null, // GET request
+        body: undefined, // GET request
       });
 
       if (error) {
