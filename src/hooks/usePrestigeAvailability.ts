@@ -1,4 +1,5 @@
 import { useGameData } from '@/hooks/useGameData';
+import { prestigeCostCoins, prestigeCostGems } from '@/economy/config';
 
 export const usePrestigeAvailability = () => {
   const { data: gameData } = useGameData();
@@ -9,15 +10,15 @@ export const usePrestigeAvailability = () => {
 
   const garden = gameData.garden;
   const prestigeLevel = garden.prestige_level || 0;
-  const prestigeCostsCoins = [150_000, 375_000, 750_000]; // Reduced by 25%
-  const prestigeCostsGems = [10, 25, 50];
-  const costCoins = prestigeCostsCoins[prestigeLevel] || Infinity;
-  const costGems = prestigeCostsGems[prestigeLevel] || Infinity;
+  const nextPrestige = prestigeLevel + 1;
+
+  // Aligné sur la RPC serveur `execute_prestige` (économie v2, prestige infini).
+  // L'ancien code plafonnait à 3 avec des coûts hardcodés — désormais obsolète.
+  const costCoins = prestigeCostCoins(nextPrestige);
+  const costGems = prestigeCostGems(nextPrestige);
 
   const isPrestigeAvailable =
-    garden.coins >= costCoins &&
-    (garden.gems || 0) >= costGems &&
-    prestigeLevel < 3;
+    garden.coins >= costCoins && (garden.gems || 0) >= costGems;
 
   return { isPrestigeAvailable };
 };
