@@ -318,10 +318,14 @@ Deno.serve(async (req) => {
         if (existingEffect && !existingError) {
           // Additionner la durée au boost existant
           const currentExpiresAt = new Date(existingEffect.expires_at);
-          const newExpiresAt = new Date(
+          // Plafond 6h (cf. MAX_ACTIVE_BOOST_MINUTES) : empêche l'empilement
+          // abusif des boosts via pubs répétées d'un jour sur l'autre.
+          const MAX_BOOST_MS = 360 * 60 * 1000;
+          const stackedMs =
             currentExpiresAt.getTime() +
-              rewardConfig.duration_minutes * 60 * 1000
-          );
+            rewardConfig.duration_minutes * 60 * 1000;
+          const capMs = new Date(now).getTime() + MAX_BOOST_MS;
+          const newExpiresAt = new Date(Math.min(stackedMs, capMs));
 
           effectResult = await supabaseClient
             .from('active_effects')
