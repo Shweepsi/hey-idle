@@ -276,6 +276,32 @@ Deno.serve(async (req) => {
         const nowIso = new Date().toISOString();
         const gemsToAdd = Math.max(0, Math.round(finalEffectValue));
 
+        // Plafond DUR de gemmes/jour, INDÉPENDANT de skip_increment : compte les
+        // sessions pub "gems" déjà créées aujourd'hui et refuse au-delà de la
+        // limite. Empêche le farm de gemmes en bouclant sur l'API (l'octroi
+        // n'est pas encore gaté par le SSV — voir chantier "sécu archi pubs").
+        const { count: gemAdsToday } = await supabaseClient
+          .from('ad_sessions')
+          .select('id', { count: 'exact', head: true })
+          .eq('user_id', user.id)
+          .eq('reward_type', 'gems')
+          .gte('created_at', today);
+
+        if ((gemAdsToday ?? 0) >= MAX_DAILY) {
+          return new Response(
+            JSON.stringify({
+              success: false,
+              error: 'Daily gem limit reached',
+              dailyCount: gemAdsToday ?? MAX_DAILY,
+              maxDaily: MAX_DAILY,
+            }),
+            {
+              status: 403,
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            }
+          );
+        }
+
         const { data: gRow } = await supabaseClient
           .from('player_gardens')
           .select('gems')
