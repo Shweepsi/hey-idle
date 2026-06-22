@@ -256,6 +256,13 @@ export function UnifiedRewardModal({
                             Durée: {reward.duration} minutes
                           </p>
                         )}
+                        {!reward.duration &&
+                          (reward.type === 'gems' ||
+                            reward.type === 'coins') && (
+                            <p className="text-sm font-semibold text-emerald-600">
+                              +{reward.amount} {reward.emoji}
+                            </p>
+                          )}
                       </div>
                       {selectedReward?.type === reward.type && (
                         <div className="w-5 h-5 rounded-full bg-orange-500 flex items-center justify-center">
