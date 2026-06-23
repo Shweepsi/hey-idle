@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 
 interface NetworkStatus {
   isOnline: boolean;
@@ -13,7 +13,6 @@ export function useNetworkStatus() {
     isSlowConnection: false,
     lastOnlineAt: navigator.onLine ? new Date() : null,
   });
-  const { toast } = useToast();
 
   useEffect(() => {
     const handleOnline = () => {
@@ -23,8 +22,7 @@ export function useNetworkStatus() {
         lastOnlineAt: new Date(),
       }));
 
-      toast({
-        title: 'Connexion rétablie',
+      toast.success('Connexion rétablie', {
         description:
           'Vous êtes de nouveau en ligne. Votre jardin se synchronise...',
       });
@@ -36,9 +34,7 @@ export function useNetworkStatus() {
         isOnline: false,
       }));
 
-      toast({
-        variant: 'destructive',
-        title: 'Connexion perdue',
+      toast.error('Connexion perdue', {
         description:
           'Mode hors ligne activé. Certaines fonctionnalités sont limitées.',
       });
@@ -65,8 +61,7 @@ export function useNetworkStatus() {
         }));
 
         if (isSlowConnection && !networkStatus.isSlowConnection) {
-          toast({
-            title: 'Connexion lente détectée',
+          toast.warning('Connexion lente détectée', {
             description: 'Les temps de chargement peuvent être plus longs.',
           });
         }
@@ -90,7 +85,7 @@ export function useNetworkStatus() {
       window.removeEventListener('offline', handleOffline);
       clearInterval(intervalId);
     };
-  }, [toast, networkStatus.isSlowConnection]);
+  }, [networkStatus.isSlowConnection]);
 
   return networkStatus;
 }

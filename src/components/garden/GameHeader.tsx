@@ -28,7 +28,7 @@ export const GameHeader = ({ garden: originalGarden }: GameHeaderProps) => {
   const garden = optimisticData?.garden || originalGarden;
   const { animations } = useAnimations();
 
-  const { rewardState } = useUnifiedRewards();
+  const { rewardState, dailyLimitReached } = useUnifiedRewards();
   const { isPremium } = usePremiumStatus();
   const { boosts, formatTimeRemaining, getTimeRemaining } = useActiveBoosts();
   const dailyRewardsEnabled = useFeatureFlag('daily_rewards_enabled', true);
@@ -58,8 +58,6 @@ export const GameHeader = ({ garden: originalGarden }: GameHeaderProps) => {
 
     // Pour Premium, toujours vérifier la limite même si l'état n'est pas encore chargé
     if (isPremium) {
-      const dailyLimitReached =
-        (rewardState.dailyCount || 0) >= (rewardState.maxDaily || 5);
       return {
         shouldAnimate: !dailyLimitReached,
         isDisabled: dailyLimitReached,
@@ -72,8 +70,6 @@ export const GameHeader = ({ garden: originalGarden }: GameHeaderProps) => {
     }
 
     // Pour les utilisateurs non-Premium
-    const dailyLimitReached =
-      (rewardState.dailyCount || 0) >= (rewardState.maxDaily || 5);
     const shouldAnimate = !dailyLimitReached;
     return {
       shouldAnimate,
@@ -84,7 +80,7 @@ export const GameHeader = ({ garden: originalGarden }: GameHeaderProps) => {
           : 'bg-gradient-to-r from-gray-400 to-gray-300 hover:from-gray-500 hover:to-gray-400'
       }`,
     };
-  }, [rewardState?.dailyCount, rewardState?.maxDaily, isPremium]);
+  }, [rewardState, dailyLimitReached, isPremium]);
 
   const getBoostIcon = (effectType: string) => {
     switch (effectType) {

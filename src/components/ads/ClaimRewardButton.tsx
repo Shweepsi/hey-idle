@@ -15,13 +15,16 @@ export function ClaimRewardButton({
   className = '',
 }: ClaimRewardButtonProps) {
   const { isPremium } = usePremiumStatus();
-  const { rewardState, loading, getStatusMessage, formatTimeUntilNext } =
-    useUnifiedRewards();
+  const {
+    rewardState,
+    loading,
+    getStatusMessage,
+    formatTimeUntilNext,
+    dailyLimitReached,
+  } = useUnifiedRewards();
 
   const [modalOpen, setModalOpen] = useState(false);
 
-  const dailyLimitReached =
-    (rewardState?.dailyCount || 0) >= (rewardState?.maxDaily || 5);
   const isDisabled = loading || dailyLimitReached || !rewardState?.available;
 
   const getButtonContent = () => {
