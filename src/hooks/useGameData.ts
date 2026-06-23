@@ -1,28 +1,14 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
-import { useEffect } from 'react';
 import { useAchievements } from '@/hooks/useAchievements';
+import { UnifiedCalculationService } from '@/services/UnifiedCalculationService';
 import { logger } from '@/utils/logger';
 import type { PlayerGarden, PlantType } from '@/types/game';
 
 export const useGameData = () => {
   const { user } = useAuth();
   const { checkAchievementProgress } = useAchievements();
-
-  // OPTIMISATION: Réduire les invalidations automatiques pour éviter les conflits avec les mises à jour optimistes
-  // Les real-time subscriptions sont désactivées car nous gérons manuellement les mises à jour via optimistic updates
-
-  // Periodic cache cleanup to prevent memory leaks (DISABLED)
-  useEffect(() => {
-    // Cache cleanup désactivé pour debugging
-    // const cleanupInterval = setInterval(() => {
-    //   UnifiedCalculationService.clearCache();
-    // }, 300000); // Clean up every 5 minutes
-    // return () => {
-    //   clearInterval(cleanupInterval);
-    // };
-  }, []);
 
   return useQuery({
     queryKey: ['gameData', user?.id],
@@ -90,23 +76,17 @@ export const useGameData = () => {
       const data = query.state.data;
       if (!data?.plots) return 10000; // 10 seconds default
 
-      // Check if there are growing plants (simplified without hooks)
-      const growingPlants = data.plots.filter((plot) => {
-        if (!plot.planted_at || !plot.plant_type) return false;
-
-        const plantType = data.plantTypes?.find(
-          (pt) => pt.id === plot.plant_type
-        );
-        if (!plantType) return false;
-
-        // Simple ready check without multipliers to avoid circular dependency
-        const plantedAt = new Date(plot.planted_at).getTime();
-        const now = Date.now();
-        const baseGrowthTime = (plantType.base_growth_seconds || 60) * 1000;
-        const timePassed = now - plantedAt;
-
-        return timePassed < baseGrowthTime; // Still growing
-      });
+      // Check if there are growing plants. Cadence-only: we mirror the
+      // canonical UnifiedCalculationService (the server-authoritative harvest
+      // decides the real reward). boost mult=1 keeps polling responsive — a
+      // boosted plant becomes ready earlier, so erring on "still growing" only
+      // means we keep the fast poll a bit longer, never the reverse.
+      const growingPlants = data.plots.filter(
+        (plot) =>
+          !!plot.planted_at &&
+          !!plot.plant_type &&
+          !UnifiedCalculationService.isPlantReady(plot.planted_at, plot, 1)
+      );
 
       // Reduce polling when no activity
       if (growingPlants.length === 0) {

@@ -195,10 +195,6 @@ export const GameHeader = ({ garden: originalGarden }: GameHeaderProps) => {
                     Niv. {xpStats.currentLevel}
                   </span>
                 </div>
-                {/* Zone d'animation pour l'XP - Disabled */}
-                <div className="animation-zone">
-                  {/* XP animations are disabled */}
-                </div>
               </div>
 
               {/* Bouton Publicité / Premium - Unifié avec état stabilisé */}
