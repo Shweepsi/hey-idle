@@ -355,7 +355,7 @@ export const GEM_DROP_MAX_CHANCE = 0.9;
 // -----------------------------------------------------------------------------
 // Ad rewards
 // -----------------------------------------------------------------------------
-export const MAX_DAILY_ADS = 10; // up from 5
+export const MAX_DAILY_ADS = 5; // aligné sur la limite réellement appliquée par le serveur (décision 2026-06-21)
 /** Max total active-boost duration (minutes) per type — stacking cap. */
 export const MAX_ACTIVE_BOOST_MINUTES = 360; // 6 hours
 

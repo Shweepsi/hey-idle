@@ -12,13 +12,12 @@ import { Gem, ShoppingCart, Sparkles, Zap, Crown } from 'lucide-react';
 import { useStripePayment } from '@/hooks/useStripePayment';
 import { useSearchParams } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 
 export const PremiumStore = () => {
   const { createPayment, verifyPayment, isLoading } = useStripePayment();
   const [searchParams, setSearchParams] = useSearchParams();
   const queryClient = useQueryClient();
-  const { toast } = useToast();
   const [isVerifying, setIsVerifying] = useState(false);
 
   // Gérer le retour de paiement
@@ -34,10 +33,8 @@ export const PremiumStore = () => {
           // Actualiser les données du jeu et le statut premium
           queryClient.invalidateQueries({ queryKey: ['gameData'] });
           queryClient.invalidateQueries({ queryKey: ['premiumStatus'] });
-          toast({
-            title: 'Merci !',
+          toast.success('Merci !', {
             description: 'Premium activé. Les publicités sont désactivées.',
-            variant: 'default',
           });
         }
 
@@ -46,14 +43,12 @@ export const PremiumStore = () => {
         setIsVerifying(false);
       });
     } else if (paymentStatus === 'cancelled') {
-      toast({
-        variant: 'destructive',
-        title: 'Paiement annulé',
+      toast.error('Paiement annulé', {
         description: 'Votre paiement a été annulé',
       });
       setSearchParams({});
     }
-  }, [searchParams, setSearchParams, verifyPayment, queryClient, toast]);
+  }, [searchParams, setSearchParams, verifyPayment, queryClient]);
 
   const handlePurchase = async () => {
     const result = await createPayment();

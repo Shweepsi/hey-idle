@@ -6,6 +6,7 @@ import { useUnifiedCalculations } from '@/hooks/useUnifiedCalculations';
 import { useAnimations } from '@/contexts/AnimationContext';
 import { useAudio } from '@/contexts/AudioContext';
 import { MAX_PLOTS } from '@/constants';
+import type { GardenPlot, PlantType } from '@/types/game';
 
 export const usePlantActions = () => {
   const { user } = useAuth();
@@ -27,7 +28,14 @@ export const usePlantActions = () => {
 
       // OPTIMISATION: Obtenir les données depuis le cache d'abord
       const cachedData = queryClient.getQueryData(['gameData', user.id]) as any;
-      let plot, garden, plantType;
+      let plot:
+        | (GardenPlot & {
+            plant_types?: {
+              [K in keyof PlantType]: PlantType[K] | null;
+            } | null;
+          })
+        | undefined;
+      let garden, plantType;
 
       if (cachedData) {
         plot = cachedData.plots?.find((p: any) => p.plot_number === plotNumber);

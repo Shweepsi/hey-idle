@@ -2,6 +2,7 @@ import { useCallback, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { formatDuration } from '@/lib/utils';
 
 export interface ActiveBoost {
   id: string;
@@ -90,19 +91,7 @@ export const useActiveBoosts = () => {
   const formatTimeRemaining = (
     seconds: number,
     showSeconds: boolean = true
-  ): string => {
-    const hours = Math.floor(seconds / 3600);
-    const minutes = Math.floor((seconds % 3600) / 60);
-    const secs = seconds % 60;
-
-    if (hours > 0) {
-      return `${hours}h ${minutes}m`;
-    } else if (minutes > 0) {
-      return showSeconds ? `${minutes}m ${secs}s` : `${minutes}m`;
-    } else {
-      return showSeconds ? `${secs}s` : '<1m';
-    }
-  };
+  ): string => formatDuration(seconds, { showSeconds });
 
   // Écouter les changements globaux pour rafraîchir après les récompenses
   // On se contente d'invalider le cache, react-query fera l'appel si nécessaire

@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { db } from '@/integrations/supabase/untyped';
+import { supabase as db } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 
 interface FeatureFlagRow {

@@ -8,6 +8,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { formatCompact } from '@/lib/utils';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import {
   Trophy,
@@ -61,11 +62,6 @@ export const LadderModal = ({ isOpen, onClose }: LadderModalProps) => {
         return 'bg-gradient-to-r from-blue-100 to-blue-200 text-blue-800';
     }
   };
-  const formatNumber = (num: number) => {
-    if (num >= 1000000) return `${(num / 1000000).toFixed(1)}M`;
-    if (num >= 1000) return `${(num / 1000).toFixed(1)}K`;
-    return num.toLocaleString();
-  };
   const LeaderboardCard = ({
     player,
     rank,
@@ -107,7 +103,7 @@ export const LadderModal = ({ isOpen, onClose }: LadderModalProps) => {
                   {icon}
                   <span>
                     {prefix}
-                    {formatNumber(value)}
+                    {formatCompact(value)}
                     {suffix}
                   </span>
                 </div>
@@ -141,7 +137,7 @@ export const LadderModal = ({ isOpen, onClose }: LadderModalProps) => {
     </div>
   );
   const CurrentUserRank = ({ category }: { category: string }) => {
-    const rank = currentUserRanks[category];
+    const rank = currentUserRanks[category as keyof typeof currentUserRanks];
     if (!rank) return null;
     return (
       <Card className="mb-4 bg-gradient-to-r from-green-50 to-emerald-50 border-green-200">

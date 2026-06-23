@@ -268,6 +268,92 @@ Deno.serve(async (req) => {
         rewardConfig.base_amount +
         rewardConfig.level_coefficient * (playerLevel - 1);
 
+      // Récompense en devise DIRECTE (gemmes) : on crédite le jardin au lieu
+      // de créer un boost temporaire. C'est le "robinet" gemmes du F2P : le
+      // joueur gagne des gemmes en regardant une pub (compte dans la limite/jour).
+      if (reward_type === 'gems') {
+        const GEM_CAP = 1_000_000;
+        const nowIso = new Date().toISOString();
+        const gemsToAdd = Math.max(0, Math.round(finalEffectValue));
+
+        // Plafond DUR de gemmes/jour, INDÉPENDANT de skip_increment : compte les
+        // sessions pub "gems" déjà créées aujourd'hui et refuse au-delà de la
+        // limite. Empêche le farm de gemmes en bouclant sur l'API (l'octroi
+        // n'est pas encore gaté par le SSV — voir chantier "sécu archi pubs").
+        const { count: gemAdsToday } = await supabaseClient
+          .from('ad_sessions')
+          .select('id', { count: 'exact', head: true })
+          .eq('user_id', user.id)
+          .eq('reward_type', 'gems')
+          .gte('created_at', today);
+
+        if ((gemAdsToday ?? 0) >= MAX_DAILY) {
+          return new Response(
+            JSON.stringify({
+              success: false,
+              error: 'Daily gem limit reached',
+              dailyCount: gemAdsToday ?? MAX_DAILY,
+              maxDaily: MAX_DAILY,
+            }),
+            {
+              status: 403,
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            }
+          );
+        }
+
+        const { data: gRow } = await supabaseClient
+          .from('player_gardens')
+          .select('gems')
+          .eq('user_id', user.id)
+          .single();
+
+        const newGems = Math.min(GEM_CAP, (gRow?.gems ?? 0) + gemsToAdd);
+
+        const { error: gemErr } = await supabaseClient
+          .from('player_gardens')
+          .update({ gems: newGems, last_played: nowIso })
+          .eq('user_id', user.id);
+
+        if (gemErr) {
+          console.error('Error granting gems:', gemErr);
+          return new Response(
+            JSON.stringify({ success: false, error: 'Failed to grant gems' }),
+            {
+              status: 500,
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            }
+          );
+        }
+
+        // Audit (best-effort)
+        await supabaseClient.from('ad_sessions').insert({
+          user_id: user.id,
+          reward_type,
+          reward_amount: gemsToAdd,
+          reward_data: { is_premium, claimed_at: nowIso, kind: 'gems' },
+          watched_at: nowIso,
+          created_at: nowIso,
+        });
+
+        console.log(`💎 Granted ${gemsToAdd} gems to user ${user.id} (total ${newGems})`);
+
+        return new Response(
+          JSON.stringify({
+            success: true,
+            message: 'Gems granted',
+            gemsGranted: gemsToAdd,
+            totalGems: newGems,
+            dailyCount: incrementResult.new_count,
+            maxDaily: MAX_DAILY,
+          }),
+          {
+            status: 200,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          }
+        );
+      }
+
       // Transaction unique pour optimiser les performances
       try {
         const now = new Date().toISOString();
@@ -318,10 +404,14 @@ Deno.serve(async (req) => {
         if (existingEffect && !existingError) {
           // Additionner la durée au boost existant
           const currentExpiresAt = new Date(existingEffect.expires_at);
-          const newExpiresAt = new Date(
+          // Plafond 6h (cf. MAX_ACTIVE_BOOST_MINUTES) : empêche l'empilement
+          // abusif des boosts via pubs répétées d'un jour sur l'autre.
+          const MAX_BOOST_MS = 360 * 60 * 1000;
+          const stackedMs =
             currentExpiresAt.getTime() +
-              rewardConfig.duration_minutes * 60 * 1000
-          );
+            rewardConfig.duration_minutes * 60 * 1000;
+          const capMs = new Date(now).getTime() + MAX_BOOST_MS;
+          const newExpiresAt = new Date(Math.min(stackedMs, capMs));
 
           effectResult = await supabaseClient
             .from('active_effects')

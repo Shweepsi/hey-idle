@@ -30,7 +30,7 @@ export const PrivacyPolicyPage = () => {
     try {
       // Demander la suppression du compte via la fonction RPC
       const { data, error } = await supabase.rpc('request_account_deletion', {
-        user_email: user.email,
+        user_email: user.email ?? '',
       });
 
       if (error) {

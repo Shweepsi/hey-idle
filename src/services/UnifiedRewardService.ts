@@ -14,7 +14,7 @@ export class UnifiedRewardService {
    */
   private static sortRewards(rewards: AdReward[]): AdReward[] {
     // Ordre de priorité : seulement les boosts maintenant
-    const order = ['coin_boost', 'gem_boost', 'growth_speed', 'growth_boost'];
+    const order = ['gems', 'coin_boost', 'gem_boost', 'growth_speed', 'growth_boost'];
 
     return rewards.sort((a, b) => {
       const aIndex = order.indexOf(a.type);
@@ -57,7 +57,8 @@ export class UnifiedRewardService {
 
       const rewards: AdReward[] = configs.map((config) => {
         const calculatedAmount =
-          config.base_amount + config.level_coefficient * (playerLevel - 1);
+          config.base_amount +
+          (config.level_coefficient ?? 0) * (playerLevel - 1);
         const finalAmount = config.max_amount
           ? Math.min(calculatedAmount, config.max_amount)
           : calculatedAmount;
@@ -65,9 +66,9 @@ export class UnifiedRewardService {
         return {
           type: config.reward_type as AdReward['type'],
           amount: Math.floor(finalAmount),
-          duration: config.duration_minutes,
+          duration: config.duration_minutes ?? undefined,
           description: config.description,
-          emoji: config.emoji,
+          emoji: config.emoji ?? '🎁',
         };
       });
 

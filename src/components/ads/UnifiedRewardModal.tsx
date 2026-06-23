@@ -13,7 +13,7 @@ import { useUnifiedRewards } from '@/hooks/useUnifiedRewards';
 import { usePremiumStatus } from '@/hooks/usePremiumStatus';
 
 import { useAdModalState } from '@/hooks/useAdModalState';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 import { AdReward } from '@/types/ads';
 import { logger } from '@/utils/logger';
 
@@ -27,7 +27,6 @@ export function UnifiedRewardModal({
   onOpenChange,
 }: UnifiedRewardModalProps) {
   const { user } = useAuth();
-  const { toast } = useToast();
   const { isPremium } = usePremiumStatus();
   const {
     rewardState,
@@ -36,6 +35,7 @@ export function UnifiedRewardModal({
     claimReward,
     getStatusMessage,
     formatTimeUntilNext,
+    dailyLimitReached,
   } = useUnifiedRewards();
 
   const { selectedReward, setSelectedReward, reset } = useAdModalState();
@@ -78,12 +78,10 @@ export function UnifiedRewardModal({
 
     try {
       // Logique unifiée : même limite pour tous, seule différence = pub ou pas
-      if ((rewardState?.dailyCount || 0) >= (rewardState?.maxDaily || 5)) {
+      if (dailyLimitReached) {
         logger.debug('Daily limit reached');
-        toast({
-          title: 'Limite atteinte',
+        toast.error('Limite atteinte', {
           description: `Limite quotidienne atteinte (${rewardState?.dailyCount || 0}/${rewardState?.maxDaily || 5})`,
-          variant: 'destructive',
         });
         return;
       }
@@ -102,25 +100,19 @@ export function UnifiedRewardModal({
         // Message différencié automatiquement dans claimReward
       } else {
         logger.warn('claimReward failed', result.error);
-        toast({
-          title: 'Erreur',
+        toast.error('Erreur', {
           description: result.error || 'Erreur lors de la réclamation',
-          variant: 'destructive',
         });
       }
     } catch (error) {
       logger.error('Error in handleClaimReward', error);
-      toast({
-        title: 'Erreur',
+      toast.error('Erreur', {
         description: 'Erreur lors de la réclamation',
-        variant: 'destructive',
       });
     }
   };
 
   const isLoading = loading;
-  const dailyLimitReached =
-    (rewardState?.dailyCount || 0) >= (rewardState?.maxDaily || 5);
   const isWebPlatform = !Capacitor.isNativePlatform();
 
   const getButtonContent = () => {
@@ -256,6 +248,13 @@ export function UnifiedRewardModal({
                             Durée: {reward.duration} minutes
                           </p>
                         )}
+                        {!reward.duration &&
+                          (reward.type === 'gems' ||
+                            reward.type === 'coins') && (
+                            <p className="text-sm font-semibold text-emerald-600">
+                              +{reward.amount} {reward.emoji}
+                            </p>
+                          )}
                       </div>
                       {selectedReward?.type === reward.type && (
                         <div className="w-5 h-5 rounded-full bg-orange-500 flex items-center justify-center">

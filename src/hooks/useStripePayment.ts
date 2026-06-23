@@ -1,12 +1,11 @@
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 import { Capacitor } from '@capacitor/core';
 import { Browser } from '@capacitor/browser';
 
 export const useStripePayment = () => {
   const [isLoading, setIsLoading] = useState(false);
-  const { toast } = useToast();
 
   const createPayment = async () => {
     try {
@@ -54,8 +53,7 @@ export const useStripePayment = () => {
         window.location.href = data.url;
       }
 
-      toast({
-        title: 'Redirection vers Stripe',
+      toast('Redirection vers Stripe', {
         description: 'Complétez votre paiement',
       });
 
@@ -63,9 +61,7 @@ export const useStripePayment = () => {
     } catch (error: any) {
       console.error('❌ Erreur payment:', error);
 
-      toast({
-        variant: 'destructive',
-        title: 'Erreur de paiement',
+      toast.error('Erreur de paiement', {
         description: error.message || 'Impossible de créer le paiement',
       });
 
@@ -95,8 +91,7 @@ export const useStripePayment = () => {
         console.log('✅ Paiement vérifié avec succès');
 
         if (!data.alreadyProcessed) {
-          toast({
-            title: 'Paiement confirmé !',
+          toast.success('Paiement confirmé !', {
             description: `${data.gemsAwarded} gemmes ajoutées à votre compte`,
           });
         }
@@ -108,9 +103,7 @@ export const useStripePayment = () => {
     } catch (error: any) {
       console.error('❌ Erreur vérification payment:', error);
 
-      toast({
-        variant: 'destructive',
-        title: 'Erreur de vérification',
+      toast.error('Erreur de vérification', {
         description: 'Impossible de vérifier le paiement',
       });
 

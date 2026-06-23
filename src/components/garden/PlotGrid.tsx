@@ -111,8 +111,8 @@ export const PlotGrid = ({
   const plotsData = useMemo(() => {
     return plots.map((plot) => {
       const isAutoHarvestPlot = plot.plot_number === 1 && hasPassiveRobot;
-      const plantType = isAutoHarvestPlot
-        ? robotPlantType
+      const plantType: PlantType | undefined = isAutoHarvestPlot
+        ? (robotPlantType ?? undefined)
         : plantTypeMap.get(plot.plant_type || '');
 
       // Utiliser maxAccumulationReached du hook (qui vérifie si >= ROBOT_MAX_ACCUMULATION_HOURS)

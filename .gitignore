@@ -12,6 +12,10 @@ dist
 dist-ssr
 *.local
 
+# Build artifacts & scratch (distribuer l'APK via Releases, pas via git)
+builds/
+tmp/
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
@@ -23,3 +27,4 @@ dist-ssr
 *.sln
 *.sw?
 .env
+supabase/.temp
