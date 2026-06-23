@@ -5,6 +5,7 @@ import { Lock, Sprout } from 'lucide-react';
 import { MemoizedPlantDisplay } from './PlantDisplay';
 import { useUnifiedCalculations } from '@/hooks/useUnifiedCalculations';
 import { PlantState } from '@/hooks/usePlantStates';
+import { formatCompact } from '@/lib/utils';
 
 interface PlotCardProps {
   plot: GardenPlot;
@@ -124,11 +125,7 @@ export const PlotCard = memo(
                 disabled={!canAffordUnlock}
                 className="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white mobile-text-xs px-2 py-1 h-auto rounded-md shadow-lg transform hover:scale-105 active:scale-95 transition-all duration-200 touch-target disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {unlockCost >= 1000000
-                  ? `${(unlockCost / 1000000).toFixed(1)}M 🪙`
-                  : unlockCost >= 1000
-                    ? `${(unlockCost / 1000).toFixed(1)}K 🪙`
-                    : `${unlockCost.toLocaleString()} 🪙`}
+                {`${formatCompact(unlockCost)} 🪙`}
               </Button>
             </div>
           ) : (

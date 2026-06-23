@@ -4,6 +4,7 @@ import { useAuth } from './useAuth';
 import { UnifiedRewardService } from '@/services/UnifiedRewardService';
 import { usePremiumStatus } from './usePremiumStatus';
 import { useGameData } from './useGameData';
+import { formatDuration } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { AdMobSimpleService } from '@/services/ads/AdMobSimpleService';
 import { AdRetryService } from '@/services/ads/AdRetryService';
@@ -76,21 +77,10 @@ export const useUnifiedRewards = () => {
     }
   }, [refetchRewardState, gameData?.garden?.level]);
 
-  const formatTimeUntilNext = useCallback((seconds: number): string => {
-    if (seconds <= 0) return '0s';
-
-    const hours = Math.floor(seconds / 3600);
-    const minutes = Math.floor((seconds % 3600) / 60);
-    const secs = seconds % 60;
-
-    if (hours > 0) {
-      return `${hours}h ${minutes}m`;
-    } else if (minutes > 0) {
-      return `${minutes}m ${secs}s`;
-    } else {
-      return `${secs}s`;
-    }
-  }, []);
+  const formatTimeUntilNext = useCallback(
+    (seconds: number): string => formatDuration(seconds),
+    []
+  );
 
   const getStatusMessage = useCallback((): string => {
     if (!user) return 'Connexion requise';
