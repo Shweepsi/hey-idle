@@ -9,6 +9,7 @@
     "build": "vite build",
     "build:dev": "vite build --mode development",
     "lint": "eslint .",
+    "check:drift": "node scripts/check-economy-drift.mjs",
     "preview": "vite preview",
     "gen:types": "supabase gen types typescript --project-id osfexuqvlpxrfaukfobn --schema public > src/integrations/supabase/types.ts"
   },
