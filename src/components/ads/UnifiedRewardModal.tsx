@@ -13,6 +13,8 @@ import { useUnifiedRewards } from '@/hooks/useUnifiedRewards';
 import { usePremiumStatus } from '@/hooks/usePremiumStatus';
 
 import { useAdModalState } from '@/hooks/useAdModalState';
+import { useGemBoost } from '@/hooks/useGemBoost';
+import { useGameData } from '@/hooks/useGameData';
 import { toast } from 'sonner';
 import { AdReward } from '@/types/ads';
 import { logger } from '@/utils/logger';
@@ -39,6 +41,20 @@ export function UnifiedRewardModal({
   } = useUnifiedRewards();
 
   const { selectedReward, setSelectedReward, reset } = useAdModalState();
+  const { buyBoost, isPurchasing } = useGemBoost();
+  const { data: gameData } = useGameData();
+  const gems = gameData?.garden?.gems ?? 0;
+  const canAffordGems =
+    selectedReward?.gemCost != null && gems >= selectedReward.gemCost;
+
+  const handleGemPurchase = async () => {
+    if (!selectedReward?.gemCost) return;
+    const ok = await buyBoost(selectedReward.type);
+    if (ok) {
+      onOpenChange(false);
+      setSelectedReward(null);
+    }
+  };
 
   const mounted = useRef(true);
 
@@ -283,14 +299,11 @@ export function UnifiedRewardModal({
           <Button
             onClick={
               isWebPlatform
-                ? () => {
-                    toast({
-                      title: 'Application mobile requise',
+                ? () =>
+                    toast('Application mobile requise', {
                       description:
                         "Les publicités ne sont disponibles que sur l'application mobile. Téléchargez l'app pour regarder des publicités et obtenir des récompenses !",
-                      variant: 'default',
-                    });
-                  }
+                    })
                 : handleClaimReward
             }
             disabled={!selectedReward || isLoading || dailyLimitReached}
@@ -299,6 +312,23 @@ export function UnifiedRewardModal({
             {getButtonContent()}
           </Button>
         </div>
+
+        {/* Alternative : obtenir le boost en payant des gemmes (sans pub) */}
+        {selectedReward?.gemCost != null && !dailyLimitReached && (
+          <Button
+            onClick={handleGemPurchase}
+            disabled={isPurchasing || isLoading || !canAffordGems}
+            variant="outline"
+            className="w-full mt-2 shrink-0 border-purple-300 text-purple-700 hover:bg-purple-50 font-medium disabled:opacity-60"
+          >
+            {isPurchasing ? (
+              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+            ) : null}
+            {canAffordGems
+              ? `Obtenir sans pub — ${selectedReward.gemCost} 💎`
+              : `${selectedReward.gemCost} 💎 (gemmes insuffisantes)`}
+          </Button>
+        )}
       </DialogContent>
     </Dialog>
   );

@@ -86,6 +86,7 @@ export type Database = {
           display_name: string
           duration_minutes: number | null
           emoji: string | null
+          gem_cost: number | null
           id: string
           level_coefficient: number | null
           max_amount: number | null
@@ -100,6 +101,7 @@ export type Database = {
           display_name: string
           duration_minutes?: number | null
           emoji?: string | null
+          gem_cost?: number | null
           id?: string
           level_coefficient?: number | null
           max_amount?: number | null
@@ -114,6 +116,7 @@ export type Database = {
           display_name?: string
           duration_minutes?: number | null
           emoji?: string | null
+          gem_cost?: number | null
           id?: string
           level_coefficient?: number | null
           max_amount?: number | null
@@ -1049,6 +1052,10 @@ export type Database = {
         Returns: Json
       }
       request_account_deletion: { Args: { user_email: string }; Returns: Json }
+      spend_gems_for_boost: {
+        Args: { p_reward_type: string; p_user_id: string }
+        Returns: Json
+      }
       unlock_plot_atomic: {
         Args: { p_plot_number: number; p_user_id: string }
         Returns: Json

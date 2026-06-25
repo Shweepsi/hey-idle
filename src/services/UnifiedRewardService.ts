@@ -69,6 +69,7 @@ export class UnifiedRewardService {
           duration: config.duration_minutes ?? undefined,
           description: config.description,
           emoji: config.emoji ?? '🎁',
+          gemCost: config.gem_cost ?? undefined,
         };
       });
 

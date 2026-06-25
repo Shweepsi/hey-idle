@@ -13,6 +13,8 @@ export interface AdReward {
   multiplier?: number;
   description: string;
   emoji: string;
+  /** Prix en gemmes pour obtenir ce boost sans pub (null/undefined = non achetable). */
+  gemCost?: number;
 }
 
 export interface AdSession {
