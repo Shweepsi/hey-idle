@@ -59,9 +59,12 @@ export const TIME_BONUS_PER_10MIN = 0.1;
 export const LEVEL_BONUS_PER_LEVEL = 0.015;
 
 /**
- * Canonical plant schedule. IDs match the `plant_types.name` column in SQL.
- * base_growth_seconds here is the NEW rebalanced value (server ships a
- * migration to match).
+ * Reflet du contenu RÉEL de la table `plant_types` (source de vérité = la DB ;
+ * le jeu lit plant_types, pas ce tableau). Maintenu à jour comme référence/doc
+ * et pour scripts/sim-plant-economy.mjs. base_growth_seconds = valeurs
+ * rééquilibrées 2026-06-25 (profit/sec monotone par tier ; cf. migration
+ * 20260625120000_rebalance_plant_growth.sql). NB: toutes les plantes sont
+ * `common` en prod (la rareté n'influe pas sur l'éco — polish futur).
  */
 export interface PlantDef {
   name: string;
@@ -73,16 +76,16 @@ export interface PlantDef {
 }
 
 export const PLANT_SCHEDULE: PlantDef[] = [
-  { name: 'wheat',      display_name: 'Blé',        emoji: '🌾', level_required: 1,  base_growth_seconds: 20,   rarity: 'common' },
-  { name: 'carrot',     display_name: 'Carotte',    emoji: '🥕', level_required: 2,  base_growth_seconds: 40,   rarity: 'common' },
-  { name: 'lettuce',    display_name: 'Laitue',     emoji: '🥬', level_required: 3,  base_growth_seconds: 75,   rarity: 'common' },
-  { name: 'tomato',     display_name: 'Tomate',     emoji: '🍅', level_required: 4,  base_growth_seconds: 90,   rarity: 'uncommon' },
-  { name: 'corn',       display_name: 'Maïs',       emoji: '🌽', level_required: 5,  base_growth_seconds: 180,  rarity: 'uncommon' },
-  { name: 'potato',     display_name: 'Patate',     emoji: '🥔', level_required: 6,  base_growth_seconds: 360,  rarity: 'rare' },
-  { name: 'pumpkin',    display_name: 'Citrouille', emoji: '🎃', level_required: 7,  base_growth_seconds: 600,  rarity: 'rare' },
-  { name: 'watermelon', display_name: 'Pastèque',   emoji: '🍉', level_required: 8,  base_growth_seconds: 1200, rarity: 'epic' },
-  { name: 'apple',      display_name: 'Pomme',      emoji: '🍎', level_required: 9,  base_growth_seconds: 1800, rarity: 'epic' },
-  { name: 'grape',      display_name: 'Raisin',     emoji: '🍇', level_required: 10, base_growth_seconds: 2700, rarity: 'legendary' },
+  { name: 'potato',     display_name: 'Pomme de terre', emoji: '🥔', level_required: 1,  base_growth_seconds: 15,  rarity: 'common' },
+  { name: 'carrot',     display_name: 'Carotte',        emoji: '🥕', level_required: 2,  base_growth_seconds: 22,  rarity: 'common' },
+  { name: 'tomato',     display_name: 'Tomate',         emoji: '🍅', level_required: 3,  base_growth_seconds: 33,  rarity: 'common' },
+  { name: 'cucumber',   display_name: 'Concombre',      emoji: '🥒', level_required: 4,  base_growth_seconds: 50,  rarity: 'common' },
+  { name: 'lettuce',    display_name: 'Salade',         emoji: '🥬', level_required: 5,  base_growth_seconds: 75,  rarity: 'common' },
+  { name: 'broccoli',   display_name: 'Brocoli',        emoji: '🥦', level_required: 6,  base_growth_seconds: 110, rarity: 'common' },
+  { name: 'banana',     display_name: 'Banane',         emoji: '🍌', level_required: 7,  base_growth_seconds: 165, rarity: 'common' },
+  { name: 'apple',      display_name: 'Pomme',          emoji: '🍎', level_required: 8,  base_growth_seconds: 250, rarity: 'common' },
+  { name: 'pear',       display_name: 'Poire',          emoji: '🍐', level_required: 9,  base_growth_seconds: 370, rarity: 'common' },
+  { name: 'strawberry', display_name: 'Fraise',         emoji: '🍓', level_required: 10, base_growth_seconds: 540, rarity: 'common' },
 ];
 
 // -----------------------------------------------------------------------------
