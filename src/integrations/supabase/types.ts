@@ -493,57 +493,6 @@ export type Database = {
         }
         Relationships: []
       }
-      pending_ad_rewards: {
-        Row: {
-          applied_amount: number
-          confirmed_at: string | null
-          created_at: string
-          id: string
-          initial_amount: number
-          last_ssv_attempt: string | null
-          metadata: Json | null
-          revoked_at: string | null
-          reward_type: string
-          source: string
-          ssv_validation_attempt_count: number | null
-          status: string
-          transaction_id: string
-          user_id: string
-        }
-        Insert: {
-          applied_amount: number
-          confirmed_at?: string | null
-          created_at?: string
-          id?: string
-          initial_amount: number
-          last_ssv_attempt?: string | null
-          metadata?: Json | null
-          revoked_at?: string | null
-          reward_type: string
-          source?: string
-          ssv_validation_attempt_count?: number | null
-          status?: string
-          transaction_id: string
-          user_id: string
-        }
-        Update: {
-          applied_amount?: number
-          confirmed_at?: string | null
-          created_at?: string
-          id?: string
-          initial_amount?: number
-          last_ssv_attempt?: string | null
-          metadata?: Json | null
-          revoked_at?: string | null
-          reward_type?: string
-          source?: string
-          ssv_validation_attempt_count?: number | null
-          status?: string
-          transaction_id?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
       plant_discoveries: {
         Row: {
           discovered_at: string | null
@@ -1013,17 +962,6 @@ export type Database = {
         Args: { p_key: string; p_patch: Json }
         Returns: Json
       }
-      calculate_ad_reward: {
-        Args: { player_level_param: number; reward_type_param: string }
-        Returns: {
-          calculated_amount: number
-          description: string
-          display_name: string
-          duration_minutes: number
-          emoji: string
-          reward_type: string
-        }[]
-      }
       claim_achievement_atomic: {
         Args: { p_achievement_name: string; p_user_id: string }
         Returns: Json
@@ -1036,16 +974,6 @@ export type Database = {
       }
       delete_user_data: { Args: { target_user_id: string }; Returns: undefined }
       execute_prestige: { Args: { p_user_id: string }; Returns: Json }
-      get_active_effects: {
-        Args: { p_user_id: string }
-        Returns: {
-          effect_type: string
-          effect_value: number
-          expires_at: string
-          id: string
-          source: string
-        }[]
-      }
       get_economy_snapshot: { Args: { p_user_id: string }; Returns: Json }
       get_leaderboard_coins: {
         Args: { p_limit?: number }
@@ -1054,16 +982,6 @@ export type Database = {
           created_at: string
           premium_status: boolean
           user_id: string
-          username: string
-        }[]
-      }
-      get_leaderboard_data: {
-        Args: { p_limit?: number; p_type: string }
-        Returns: {
-          level_value: number
-          prestige_value: number
-          rank_position: number
-          stat_value: number
           username: string
         }[]
       }
@@ -1134,10 +1052,6 @@ export type Database = {
       unlock_plot_atomic: {
         Args: { p_plot_number: number; p_user_id: string }
         Returns: Json
-      }
-      validate_robot_plant_level: {
-        Args: { p_plant_type_id: string; p_robot_level: number }
-        Returns: boolean
       }
     }
     Enums: {
