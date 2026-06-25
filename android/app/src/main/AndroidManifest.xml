@@ -32,8 +32,9 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
 
-            <!-- Deep link for Stripe return -->
-            <intent-filter android:autoVerify="true">
+            <!-- Deep link for Stripe return (schéma custom idlegrow://payment ;
+                 pas d'autoVerify : réservé aux App Links https vérifiés) -->
+            <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
