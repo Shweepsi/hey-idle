@@ -14,10 +14,10 @@
  *
  * Usage : node scripts/check-economy-drift.mjs   (exit 1 si dérive)
  */
-import { readFileSync } from 'node:fs';
+import { readFileSync, readdirSync } from 'node:fs';
 
 const CONFIG = 'src/economy/config.ts';
-const SQL = 'supabase/migrations/20260423110000_economy_v2_rpcs.sql';
+const MIGRATIONS_DIR = 'supabase/migrations';
 
 // Constantes distinctives dont la valeur, si présente dans le SQL, est un vrai
 // signal (on évite 0.1 / 1 / 100 trop communs pour ne pas faux-passer).
@@ -33,7 +33,12 @@ const WATCHED = [
 ];
 
 const config = readFileSync(CONFIG, 'utf8');
-const sql = readFileSync(SQL, 'utf8');
+// Concatène toutes les migrations : une constante peut être (re)définie dans
+// n'importe quelle migration (ou un patch ultérieur), pas seulement economy_v2.
+const sql = readdirSync(MIGRATIONS_DIR)
+  .filter((f) => f.endsWith('.sql'))
+  .map((f) => readFileSync(`${MIGRATIONS_DIR}/${f}`, 'utf8'))
+  .join('\n');
 
 const problems = [];
 for (const name of WATCHED) {
@@ -44,7 +49,7 @@ for (const name of WATCHED) {
   }
   const value = m[1].replace(/_/g, '');
   if (!sql.includes(value)) {
-    problems.push(`${name} = ${value} : absent de ${SQL} → dérive config↔SQL`);
+    problems.push(`${name} = ${value} : absent des migrations SQL → dérive config↔SQL`);
   }
 }
 

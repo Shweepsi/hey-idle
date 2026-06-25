@@ -145,7 +145,7 @@ export function levelMilestoneGems(oldLevel: number, newLevel: number): number {
 // -----------------------------------------------------------------------------
 /** Cost scales: base * growth^level. No hard level cap. */
 export const PRESTIGE_BASE_COST_COINS = 150_000;
-export const PRESTIGE_COST_GROWTH = 2.2;
+export const PRESTIGE_COST_GROWTH = 1.9; // rééquilibré 2026-06-25 (était 2.2) — boucle plus atteignable
 /** Gem cost scales linearly-ish: base + level*5. */
 export const PRESTIGE_BASE_COST_GEMS = 10;
 export const PRESTIGE_COST_GEMS_PER_LEVEL = 5;
@@ -176,11 +176,12 @@ export function prestigeMultiplier(prestigeLevel: number): number {
 /**
  * Essence earned on prestige, based on coins banked THIS RUN.
  *   essence = floor(ESSENCE_COEF * sqrt(coins_this_run / ESSENCE_DENOM))
- * With coef=10 and denom=1e6:
- *   1M banked → 10, 100M → 100, 10B → 1000, 1T → 10000.
+ * Rééquilibré 2026-06-25 (était coef=10, denom=1e6 → 1er prestige ≈ 4 essence,
+ * punitif). coef=25, denom=250k → 1er prestige ≈ 23 (un vrai boost), boucle
+ * qui suit mieux le coût. Repères : 250k→25, 1M→50, 100M→500, 1T→~50000.
  */
-export const ESSENCE_COEF = 10;
-export const ESSENCE_DENOM = 1_000_000;
+export const ESSENCE_COEF = 25;
+export const ESSENCE_DENOM = 250_000;
 
 export function essenceEarned(coinsThisRun: number, essenceBoostMultiplier = 1): number {
   if (coinsThisRun <= 0) return 0;
