@@ -37,11 +37,18 @@ jobs:
 
       - name: Update Android version
         run: |
-          VERSION="1.0.${{ github.run_number }}"
-          sed -i "s/versionCode [0-9]*/versionCode ${{ github.run_number }}/" android/app/build.gradle
+          # versionCode = 1000 + run_number. L'offset 1000 repasse au-dessus du
+          # max déjà publié sur le Play Store (601, avant que le renommage du
+          # workflow aab-signed.yml -> android-release.yml ne remette run_number
+          # à zéro). ⚠️ NE PAS renommer ce workflow : ça reset run_number et fait
+          # régresser le versionCode (Play refuse). Si renommé un jour, augmenter
+          # l'offset au-dessus du dernier versionCode publié.
+          VCODE=$(( 1000 + ${{ github.run_number }} ))
+          VERSION="1.0.$VCODE"
+          sed -i "s/versionCode [0-9]*/versionCode $VCODE/" android/app/build.gradle
           sed -i "s/versionName \"[^\"]*\"/versionName \"$VERSION\"/" android/app/build.gradle
           sed -i "s/APP_VERSION = \"[^\"]*\"/APP_VERSION = \"$VERSION\"/" src/version.ts
-          echo "Updated to versionCode: ${{ github.run_number }}, versionName: $VERSION"
+          echo "Updated to versionCode: $VCODE, versionName: $VERSION"
 
       - name: Build web assets
         run: npm run build
